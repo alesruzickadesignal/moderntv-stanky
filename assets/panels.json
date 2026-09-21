@@ -1,5 +1,7 @@
 {
   "back": "assets/back.pdf",
+  "counter": "assets/counter.pdf",
+  "fascia": "assets/fascia.pdf",
   "left": "assets/left.pdf",
   "right": "assets/right.pdf",
   "tv": "assets/tv.pdf"
