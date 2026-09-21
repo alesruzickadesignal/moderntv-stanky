@@ -19,34 +19,36 @@ img{max-width:100%}
 <body>
 <style>
 :root{
-  --bg:#F1F3EE; --surface:#FFFFFF; --surface-2:#E7EAE1; --line:#D3D7CA; --line-soft:#E2E5DB;
-  --text:#161B16; --dim:#5D655B; --faint:#8C948A;
-  --accent:#63900A; --accent-bright:#C0E300; --accent-soft:#EDF5D2;
-  --ok:#2F7A4E; --ok-bg:#E4F1E7; --warn:#9C640A; --warn-bg:#F7EEDC; --bad:#A93A31; --bad-bg:#F7E4E2;
+  --bg:#F5F2ED; --surface:#FFFFFF; --surface-2:#EBE6DF; --line:#DAD3C9; --line-soft:#E8E3DA;
+  --text:#1A1613; --dim:#665E55; --faint:#968D82;
+  /* firemní oranžová naměřená z nameboardu; --accent je tmavší varianta,
+     aby drobný text na bílé měl kontrast */
+  --accent:#9E550C; --accent-bright:#E4883C; --accent-soft:#FBEBDA;
+  --ok:#2F7A4E; --ok-bg:#E3F0E7; --warn:#7A6006; --warn-bg:#F3EFD9; --bad:#A93A31; --bad-bg:#F8E5E2;
   --hall-top:#EDEFF1; --hall-bottom:#D2D6DA; --hall-floor:#C6CACE;
-  --blank:#DCE0D6; --blank-line:#C3C8BA;
+  --blank:#E0DBD3; --blank-line:#C8C2B7;
   --ring:0 0 0 2px var(--accent-bright);
-  --shadow:0 1px 2px rgba(20,28,18,.05), 0 10px 28px -16px rgba(20,28,18,.28);
+  --shadow:0 1px 2px rgba(28,22,16,.05), 0 10px 28px -16px rgba(28,22,16,.28);
   --r:10px;
 }
 @media (prefers-color-scheme: dark){
   :root:not([data-theme="light"]){
-    --bg:#111410; --surface:#191D18; --surface-2:#222720; --line:#333A31; --line-soft:#282E26;
-    --text:#E9EEE3; --dim:#9BA494; --faint:#78806F;
-    --accent:#AFD62B; --accent-bright:#C0E300; --accent-soft:#2A3313;
-    --ok:#6ECB93; --ok-bg:#1B2A20; --warn:#E0AE55; --warn-bg:#2E2617; --bad:#E58278; --bad-bg:#31201D;
+    --bg:#14120F; --surface:#1C1A16; --surface-2:#26221D; --line:#39332B; --line-soft:#2C2721;
+    --text:#EFEAE3; --dim:#A49A8D; --faint:#7F766A;
+    --accent:#EFA05C; --accent-bright:#E4883C; --accent-soft:#3A2410;
+    --ok:#6ECB93; --ok-bg:#1B2A20; --warn:#D8BC57; --warn-bg:#2C2814; --bad:#E58278; --bad-bg:#31201D;
     --hall-top:#2B2F33; --hall-bottom:#1A1D20; --hall-floor:#232629;
-    --blank:#2C322A; --blank-line:#3B4238;
+    --blank:#302C26; --blank-line:#423C34;
     --shadow:0 1px 2px rgba(0,0,0,.4), 0 12px 32px -18px rgba(0,0,0,.8);
   }
 }
 :root[data-theme="dark"]{
-  --bg:#111410; --surface:#191D18; --surface-2:#222720; --line:#333A31; --line-soft:#282E26;
-  --text:#E9EEE3; --dim:#9BA494; --faint:#78806F;
-  --accent:#AFD62B; --accent-bright:#C0E300; --accent-soft:#2A3313;
-  --ok:#6ECB93; --ok-bg:#1B2A20; --warn:#E0AE55; --warn-bg:#2E2617; --bad:#E58278; --bad-bg:#31201D;
+  --bg:#14120F; --surface:#1C1A16; --surface-2:#26221D; --line:#39332B; --line-soft:#2C2721;
+  --text:#EFEAE3; --dim:#A49A8D; --faint:#7F766A;
+  --accent:#EFA05C; --accent-bright:#E4883C; --accent-soft:#3A2410;
+  --ok:#6ECB93; --ok-bg:#1B2A20; --warn:#D8BC57; --warn-bg:#2C2814; --bad:#E58278; --bad-bg:#31201D;
   --hall-top:#2B2F33; --hall-bottom:#1A1D20; --hall-floor:#232629;
-  --blank:#2C322A; --blank-line:#3B4238;
+  --blank:#302C26; --blank-line:#423C34;
   --shadow:0 1px 2px rgba(0,0,0,.4), 0 12px 32px -18px rgba(0,0,0,.8);
 }
 
@@ -95,7 +97,7 @@ main{display:flex; flex-direction:column; flex:1; min-height:0}
 }
 .blank{
   background-color:var(--blank);
-  background-image:repeating-linear-gradient(45deg, transparent 0 14px, rgba(128,140,120,.16) 14px 15px);
+  background-image:repeating-linear-gradient(45deg, transparent 0 14px, rgba(150,134,114,.18) 14px 15px);
   box-shadow:inset 0 0 0 1px var(--blank-line);
 }
 .sel > .face{outline:3px solid var(--accent-bright); outline-offset:-3px}
@@ -103,7 +105,7 @@ main{display:flex; flex-direction:column; flex:1; min-height:0}
 .dimtag{
   position:absolute; left:50%; top:50%; transform:translate(-50%,-50%);
   font-family:"IBM Plex Mono", monospace; font-size:16px; white-space:nowrap;
-  background:rgba(12,16,10,.72); color:#DCE9B8; padding:4px 9px; border-radius:4px;
+  background:rgba(12,16,10,.72); color:#F7E4CE; padding:4px 9px; border-radius:4px;
   letter-spacing:.02em;
 }
 /* zástěra podlahy PŘED stánkem – nikdy nesahá za zadní stěnu, jinak by ji CSS
@@ -122,7 +124,7 @@ main{display:flex; flex-direction:column; flex:1; min-height:0}
   box-shadow:var(--shadow);
 }
 .chip:hover{border-color:var(--accent)}
-.chip[aria-pressed="true"]{background:var(--accent-bright); border-color:var(--accent-bright); color:#1A2000; font-weight:600}
+.chip[aria-pressed="true"]{background:var(--accent-bright); border-color:var(--accent-bright); color:#24170A; font-weight:600}
 .zoom{position:absolute; right:12px; bottom:12px; display:flex; flex-direction:column; gap:6px}
 .zoom button{width:34px; height:34px; border-radius:8px; border:1px solid var(--line);
   background:color-mix(in srgb, var(--surface) 88%, transparent); cursor:pointer; font-size:17px; line-height:1;
@@ -168,8 +170,8 @@ main{display:flex; flex-direction:column; flex:1; min-height:0}
   padding:5px 10px; font-size:11.5px; cursor:pointer;
 }
 .btn:hover{border-color:var(--accent); color:var(--accent)}
-.btn.primary{background:var(--accent-bright); border-color:var(--accent-bright); color:#1A2000; font-weight:600}
-.btn.primary:hover{color:#1A2000; filter:brightness(1.04)}
+.btn.primary{background:var(--accent-bright); border-color:var(--accent-bright); color:#24170A; font-weight:600}
+.btn.primary:hover{color:#24170A; filter:brightness(1.04)}
 .dims{display:flex; align-items:center; gap:5px; font-size:11px; color:var(--dim)}
 .dims input{
   width:52px; padding:3px 5px; border:1px solid var(--line); border-radius:5px;
@@ -373,7 +375,7 @@ function sampleArt(w, h, kind){
 
   x.save(); x.translate(W*.5,H*.5); x.rotate(-.35);
   var gg = x.createLinearGradient(-W,0,W,0);
-  gg.addColorStop(0,"rgba(192,227,0,0)"); gg.addColorStop(.5,"rgba(192,227,0,.55)"); gg.addColorStop(1,"rgba(192,227,0,0)");
+  gg.addColorStop(0,"rgba(228,136,60,0)"); gg.addColorStop(.5,"rgba(228,136,60,.55)"); gg.addColorStop(1,"rgba(228,136,60,0)");
   x.fillStyle = gg; x.fillRect(-W, m*(kind==="strip"? .05 : .22), W*2, m*.035); x.restore();
 
   function word(cx, cy, size){
@@ -382,31 +384,31 @@ function sampleArt(w, h, kind){
     var a = "MODERN ", b = "TV";
     var wa = x.measureText(a).width, wb = x.measureText(b).width, tot = wa+wb;
     x.fillStyle = "#F2F6EC"; x.textAlign="left"; x.fillText(a, cx-tot/2, cy);
-    x.fillStyle = "#C0E300"; x.fillText(b, cx-tot/2+wa, cy);
+    x.fillStyle = "#E4883C"; x.fillText(b, cx-tot/2+wa, cy);
   }
   function chip(cx, cy, r, pct, label){
     x.lineWidth = r*.22;
     x.strokeStyle = "rgba(255,255,255,.14)"; x.beginPath(); x.arc(cx,cy,r,0,Math.PI*2); x.stroke();
-    x.strokeStyle = "#C0E300"; x.beginPath();
+    x.strokeStyle = "#E4883C"; x.beginPath();
     x.arc(cx,cy,r,-Math.PI/2,-Math.PI/2+Math.PI*2*pct); x.stroke();
     x.fillStyle="#F2F6EC"; x.textAlign="center"; x.textBaseline="middle";
     x.font = "600 " + (r*.62) + 'px "IBM Plex Mono", monospace';
     x.fillText(Math.round(pct*100)+"%", cx, cy+r*.02);
-    x.fillStyle="rgba(230,240,220,.55)"; x.font = "500 " + (r*.30) + 'px "IBM Plex Sans", sans-serif';
+    x.fillStyle="rgba(240,232,222,.55)"; x.font = "500 " + (r*.30) + 'px "IBM Plex Sans", sans-serif';
     x.fillText(label, cx, cy+r*1.42);
   }
   function bars(cx, cy, bw, bh){
     var v=[.85,.62,.94,.48,.71], n=v.length, gap=bw*.06, sw=(bw-gap*(n-1))/n;
     for(var i=0;i<n;i++){
       var hgt = bh*v[i], bx = cx-bw/2+i*(sw+gap);
-      x.fillStyle = i===2 ? "#C0E300" : "rgba(180,205,225,.32)";
+      x.fillStyle = i===2 ? "#E4883C" : "rgba(180,205,225,.32)";
       x.fillRect(bx, cy+bh/2-hgt, sw, hgt);
     }
   }
 
   if(kind==="stats"){
     word(W*.5, H*.30, m*.115);
-    x.fillStyle="rgba(226,238,214,.62)"; x.textAlign="center";
+    x.fillStyle="rgba(240,232,222,.62)"; x.textAlign="center";
     x.font = "500 " + (m*.038) + 'px "IBM Plex Sans", sans-serif';
     x.fillText("SPORTOVNÍ STATISTIKY V ŽIVÉM VYSÍLÁNÍ", W*.5, H*.30+m*.10);
     chip(W*.27, H*.66, m*.10, .78, "Sledovanost");
@@ -414,14 +416,14 @@ function sampleArt(w, h, kind){
     bars(W*.75, H*.66, m*.28, m*.20);
   } else if(kind==="hero"){
     word(W*.5, H*.42, m*.13);
-    x.fillStyle="#C0E300"; x.textAlign="center";
+    x.fillStyle="#E4883C"; x.textAlign="center";
     x.font = "500 " + (m*.042) + 'px "IBM Plex Sans", sans-serif';
     x.fillText("IPTV · OTT · CLOUD DVR", W*.5, H*.42+m*.12);
     chip(W*.5, H*.74, m*.09, .64, "Engagement");
   } else if(kind==="grid"){
     var cols=4, rows=3, pad=m*.06, cw=(W-pad*(cols+1))/cols, ch=(H-pad*(rows+1))/rows;
     for(var r2=0;r2<rows;r2++) for(var c2=0;c2<cols;c2++){
-      x.fillStyle = (r2*cols+c2)%5===0 ? "rgba(192,227,0,.20)" : "rgba(160,190,215,.09)";
+      x.fillStyle = (r2*cols+c2)%5===0 ? "rgba(228,136,60,.20)" : "rgba(160,190,215,.09)";
       x.fillRect(pad+c2*(cw+pad), pad+r2*(ch+pad), cw, ch);
     }
     word(W*.5, H*.5, m*.11);
@@ -437,11 +439,11 @@ function sampleArt(w, h, kind){
     for(var k=0;k<4;k++){
       x.fillStyle="rgba(150,180,205,.13)";
       x.fillRect(m*.035+k*tw, H*.22, tw-m*.035, H*.36);
-      x.fillStyle="rgba(192,227,0,.5)";
+      x.fillStyle="rgba(228,136,60,.5)";
       x.fillRect(m*.035+k*tw, H*.22, tw-m*.035, H*.012);
     }
     x.fillStyle="rgba(150,180,205,.10)"; x.fillRect(m*.035, H*.66, W-m*.07, H*.26);
-    x.fillStyle="#C0E300"; x.fillRect(m*.035, H*.66, W*.22, H*.012);
+    x.fillStyle="#E4883C"; x.fillRect(m*.035, H*.66, W*.22, H*.012);
   }
   return c.toDataURL("image/jpeg", .86);
 }
