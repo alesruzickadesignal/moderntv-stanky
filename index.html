@@ -311,7 +311,7 @@ var TVS = {43:[95.2,53.6], 50:[110.7,62.3], 55:[121.8,68.5], 65:[143.9,81.0]};
 
 var P = {};                  // id -> panel state
 DEFAULTS.forEach(function(d){
-  P[d.id] = Object.assign({}, d, {src:null, px:null, pdf:null, demo:false, local:false, asset:false});
+  P[d.id] = Object.assign({}, d, {src:null, px:null, pdf:null, demo:false, local:false, asset:false, loading:false});
 });
 
 var ui = {tv:true, counter:true, fascia:true, dims:false, unfold:false, cut:false, tvSize:55, tvPos:"back", sel:null};
@@ -690,7 +690,11 @@ function renderCards(){
 
     var th = document.createElement("div"); th.className = "thumb";
     if(p.src){ var im = document.createElement("img"); im.src = p.src; im.alt = ""; th.appendChild(im); }
-    else { var ph = document.createElement("span"); ph.className="ph"; ph.textContent="prázdné"; th.appendChild(ph); }
+    else {
+      var ph = document.createElement("span"); ph.className="ph";
+      ph.textContent = p.loading ? "…" : "prázdné";
+      th.appendChild(ph);
+    }
     card.appendChild(th);
 
     var b = document.createElement("div"); b.className = "cbody";
@@ -703,7 +707,8 @@ function renderCards(){
 
     var bd = document.createElement("div"); bd.className = "badges";
     var c = check(p);
-    if(p.demo){ bd.appendChild(badge("demo","ukázka")); }
+    if(p.loading){ bd.appendChild(badge("demo","načítá se…")); }
+    else if(p.demo){ bd.appendChild(badge("demo","ukázka")); }
     else {
       /* odkud grafika je, a k tomu vždycky i kontrola kvality */
       if(p.asset) bd.appendChild(badge("demo","z repozitáře"));
@@ -719,7 +724,10 @@ function renderCards(){
     if(bd.children.length) b.appendChild(bd);
 
     var mt = document.createElement("div"); mt.className = "meta mono";
-    if(p.pdf){
+    if(p.loading){
+      mt.textContent = "stahuji grafiku z repozitáře…";
+    }
+    else if(p.pdf){
       var cm1 = function(v){ return v.toFixed(v < 100 ? 1 : 0).replace(".",","); };
       mt.textContent = "PDF " + cm1(p.pdf.wcm) + " × " + cm1(p.pdf.hcm) + " cm"
         + (c.scale ? "" : " · měřítko neurčeno")
@@ -766,7 +774,10 @@ function renderCards(){
   });
 
   var filled = DEFAULTS.filter(function(d){ return P[d.id].src; }).length;
-  document.getElementById("fillinfo").textContent = filled + " z " + DEFAULTS.length + " osazeno";
+  var loading = DEFAULTS.filter(function(d){ return P[d.id].loading; }).length;
+  document.getElementById("fillinfo").textContent = loading
+    ? "načítám " + loading + " z repozitáře…"
+    : filled + " z " + DEFAULTS.length + " osazeno";
   var area = DEFAULTS.reduce(function(s,d){
     var p = P[d.id];
     return s + (d.kind==="screen" ? 0 : p.w*p.h/10000);
@@ -885,9 +896,17 @@ function loadAssets(){
     return r.json();
   }).then(function(man){
     MANIFEST = man;
-    return Promise.all(Object.keys(man)
-      .filter(function(id){ return P[id] && !P[id].local; })
-      .map(loadOneAsset));
+    var todo = Object.keys(man).filter(function(id){ return P[id] && !P[id].local; });
+    /* tisková PDF se stahují i pár sekund – ukázku rovnou pryč, ať nepřeskočí */
+    todo.forEach(function(id){
+      var p = P[id];
+      p.loading = true;
+      if(p.demo){ p.src = null; p.px = null; p.demo = false; }
+    });
+    refresh();
+    return Promise.all(todo.map(function(id){
+      return loadOneAsset(id).then(function(){ P[id].loading = false; refresh(); });
+    }));
   }).catch(function(){ /* soubor:// nebo prázdné assets – zůstanou ukázky */ });
 }
 
