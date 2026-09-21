@@ -1,1 +1,6 @@
-{}
+{
+  "back": "assets/back.pdf",
+  "left": "assets/left.pdf",
+  "right": "assets/right.pdf",
+  "tv": "assets/tv.pdf"
+}
