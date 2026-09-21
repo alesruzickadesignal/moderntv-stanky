@@ -17,15 +17,18 @@ Přípony: `.jpg`, `.jpeg`, `.png`, `.webp`, `.pdf`. Takže např. `back.jpg`,
 
 `panels.json` generuje `build.py` — needituj ho ručně.
 
-## Na velikost souborů pozor
+## Zmenšené náhledy, ne tisková data
 
-GitHub odmítne soubor nad 100 MB a nad 50 MB varuje. Tisková data v plném
-rozlišení se sem nehodí — nahraj **náhledovou verzi**, na kontrolu stačí:
+Stránka soubory stahuje a vykresluje v prohlížeči, takže tisková PDF ji zpomalí
+na desítky sekund. Náhled vyrobí macOS `sips`:
 
 ```bash
-# JPG na dlouhou stranu 3000 px
-magick back.tif -resize 3000x3000 -quality 88 back.jpg
+sips -s format jpeg -s formatOptions 80 -Z 2400 tisk.pdf --out assets/back.jpg
 ```
 
-Kontrola PPI v aplikaci pak ukáže rozlišení toho náhledu, ne finálních dat —
-u panelů z repozitáře to ber jako informaci o náhledu.
+U rastrového náhledu aplikace hlásí jen poměr stran, ne PPI — měřilo by náhled,
+ne finální data. Tisková data kontroluj na originálu, nebo si ho v aplikaci nahraj
+přes **Nahradit** (zůstane jen u tebe v prohlížeči).
+
+Vložené **PDF** se čte v plné parádě — pozná se z něj měřítko i spadávka —
+ale je pomalé. GitHub navíc odmítne soubor nad 100 MB.

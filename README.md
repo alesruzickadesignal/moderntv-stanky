@@ -35,11 +35,22 @@ python3 build.py && git add -A && git commit -m "grafika stěn" && git push
 ```
 
 `build.py` z toho poskládá `assets/panels.json` a stránka grafiku načte každému
-návštěvníkovi. Panel má pak odznak **z repozitáře** a kontrola PPI i poměru stran
-na něj platí stejně jako na nahranou fotku.
+návštěvníkovi.
 
-Na velikost pozor — GitHub odmítne soubor nad 100 MB. Tisková data v plném
-rozlišení sem nedávej, stačí náhled do ~3000 px na dlouhou stranu.
+**Dávej sem zmenšené náhledy, ne tisková data.** Stránka se jinak načítá desítky
+sekund. Z tiskového PDF náhled vyrobí jednou ranou macOS `sips`:
+
+```bash
+sips -s format jpeg -s formatOptions 80 -Z 2400 tisk.pdf --out assets/back.jpg
+```
+
+Rastrový soubor z repozitáře má v aplikaci odznak **náhled z repozitáře** a hlásí
+se u něj jen poměr stran — PPI by měřilo náhled, ne tisková data, takže by
+zbytečně svítilo červeně. Poměr stran smysl má, ten odhalí špatné proporce.
+
+Když do `assets/` dáš přímo **PDF**, přečte se z něj fyzický rozměr stránky
+a aplikace hlásí měřítko (1:1, 1:10 …) i spadávku. Je to přesnější, ale pomalé —
+hodí se to na vlastní kontrolu, ne na sdílený odkaz.
 
 ## Soukromí
 

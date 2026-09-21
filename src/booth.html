@@ -252,6 +252,10 @@ details.notes b{color:var(--text); font-weight:600}
       <details class="notes">
         <summary>Jak se počítá kvalita a co poslat do tisku</summary>
         <ul>
+          <li><b>Panely označené „náhled z repozitáře"</b> mají grafiku dodanou v repozitáři
+            jako zmenšený obrázek, aby se stránka rychle načetla. U nich se hlásí jen poměr
+            stran — PPI by měřilo náhled, ne tisková data. Vlastní nahraný soubor se
+            kontroluje celý.</li>
           <li><b>PDF i bitmapa.</b> U PDF se místo PPI čte fyzický rozměr stránky: náhled
             ukáže zjištěné měřítko (1:1, 1:10 …) a spadávku navíc oproti čistému formátu.
             Vykresluje se první stránka.</li>
@@ -695,6 +699,12 @@ function renderCards(){
     var c = check(p);
     if(p.loading){ bd.appendChild(badge("demo","načítá se…")); }
     else if(p.demo){ bd.appendChild(badge("demo","ukázka")); }
+    else if(p.asset && !p.pdf){
+      /* rastrový náhled z repozitáře: PPI by měřilo náhled, ne tisková data,
+         takže se hlásí jen poměr stran, který smysl má */
+      bd.appendChild(badge("demo","náhled z repozitáře"));
+      if(c) bd.appendChild(badge(c.arState, c.arState==="ok" ? "poměr" : "poměr −" + c.dev + " %"));
+    }
     else {
       /* odkud grafika je, a k tomu vždycky i kontrola kvality */
       if(p.asset) bd.appendChild(badge("demo","z repozitáře"));
@@ -712,6 +722,10 @@ function renderCards(){
     var mt = document.createElement("div"); mt.className = "meta mono";
     if(p.loading){
       mt.textContent = "stahuji grafiku z repozitáře…";
+    }
+    else if(p.asset && p.px){
+      mt.textContent = "náhled " + fmt(p.px[0]) + " × " + fmt(p.px[1]) + " px"
+        + " · rozlišení pro tisk kontroluj na originálu";
     }
     else if(p.pdf){
       var cm1 = function(v){ return v.toFixed(v < 100 ? 1 : 0).replace(".",","); };
