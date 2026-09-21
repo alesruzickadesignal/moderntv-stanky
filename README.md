@@ -24,11 +24,30 @@ dost velká pro tisk.
 Výchozí rozměry: půdorys 4,00 × 3,00 m, stěny 3,00 m, lišta 2,00 × 0,70 m,
 čelo pultu 1,08 × 0,95 m, celkem 3,70 m na výšku.
 
+## Grafika pro všechny, kdo otevřou odkaz
+
+Vlož soubor do [`assets/`](assets/), pojmenuj ho podle panelu (`back.jpg`,
+`leva-stena.pdf`, `lista.png` — celá tabulka názvů je v `assets/README.md`),
+spusť build a pushni:
+
+```bash
+python3 build.py && git add -A && git commit -m "grafika stěn" && git push
+```
+
+`build.py` z toho poskládá `assets/panels.json` a stránka grafiku načte každému
+návštěvníkovi. Panel má pak odznak **z repozitáře** a kontrola PPI i poměru stran
+na něj platí stejně jako na nahranou fotku.
+
+Na velikost pozor — GitHub odmítne soubor nad 100 MB. Tisková data v plném
+rozlišení sem nedávej, stačí náhled do ~3000 px na dlouhou stranu.
+
 ## Soukromí
 
-Nahrané obrázky zůstávají **jen v prohlížeči** (IndexedDB) — nikam se neodesílají
-a nejsou v tomhle repozitáři. Na jiném počítači nebo v anonymním okně bude stánek
-prázdný, s ukázkovou grafikou.
+Grafika **nahraná v aplikaci** zůstává jen v prohlížeči (IndexedDB) — nikam se
+neodesílá a není v repozitáři. Je nadřazená tomu, co je v `assets/`: co si nahraješ,
+vidíš jen ty, a tlačítkem **Odebrat** se vrátí verze z repozitáře.
+
+Pořadí: vlastní nahraná grafika → `assets/` → ukázka kreslená za běhu.
 
 ## Struktura
 
@@ -36,7 +55,8 @@ prázdný, s ukázkovou grafikou.
 |---|---|
 | `src/booth.html` | zdroj — holý obsah stránky bez `<!doctype>` a `<head>` |
 | `index.html` | generovaný soubor, který servíruje GitHub Pages |
-| `build.py` | doplní obálku (charset, viewport, reset) a přesune `<title>`/`<link>` do `<head>` |
+| `build.py` | doplní obálku (charset, viewport, reset), přesune `<title>`/`<link>` do `<head>` a poskládá manifest assetů |
+| `assets/` | grafika dodaná v repozitáři + `panels.json` (generovaný) |
 
 Zdroj je bez obálky proto, že v téhle podobě ho publikují Claude Artifacts, které si ji
 přidávají samy. Po úpravě `src/booth.html` je potřeba spustit:

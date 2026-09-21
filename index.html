@@ -310,7 +310,9 @@ var DEFAULTS = [
 var TVS = {43:[95.2,53.6], 50:[110.7,62.3], 55:[121.8,68.5], 65:[143.9,81.0]};
 
 var P = {};                  // id -> panel state
-DEFAULTS.forEach(function(d){ P[d.id] = Object.assign({}, d, {src:null, px:null, demo:false}); });
+DEFAULTS.forEach(function(d){
+  P[d.id] = Object.assign({}, d, {src:null, px:null, pdf:null, demo:false, local:false, asset:false});
+});
 
 var ui = {tv:true, counter:true, fascia:true, dims:false, unfold:false, cut:false, tvSize:55, tvPos:"back", sel:null};
 var PERSP = 2600;
@@ -702,14 +704,17 @@ function renderCards(){
     var bd = document.createElement("div"); bd.className = "badges";
     var c = check(p);
     if(p.demo){ bd.appendChild(badge("demo","ukázka")); }
-    else if(c && c.pdf){
-      bd.appendChild(badge("demo","PDF"));
-      bd.appendChild(c.scale ? badge("ok", c.scale.label) : badge("bad","měřítko nesedí"));
-      bd.appendChild(badge(c.arState, c.arState==="ok" ? "poměr" : "poměr −" + c.dev + " %"));
-    }
-    else if(c){
-      bd.appendChild(badge(c.ppiState, c.ppi + " PPI"));
-      bd.appendChild(badge(c.arState, c.arState==="ok" ? "poměr" : "poměr −" + c.dev + " %"));
+    else {
+      /* odkud grafika je, a k tomu vždycky i kontrola kvality */
+      if(p.asset) bd.appendChild(badge("demo","z repozitáře"));
+      if(c && c.pdf){
+        bd.appendChild(badge("demo","PDF"));
+        bd.appendChild(c.scale ? badge("ok", c.scale.label) : badge("bad","měřítko nesedí"));
+        bd.appendChild(badge(c.arState, c.arState==="ok" ? "poměr" : "poměr −" + c.dev + " %"));
+      } else if(c){
+        bd.appendChild(badge(c.ppiState, c.ppi + " PPI"));
+        bd.appendChild(badge(c.arState, c.arState==="ok" ? "poměr" : "poměr −" + c.dev + " %"));
+      }
     }
     if(bd.children.length) b.appendChild(bd);
 
@@ -735,13 +740,15 @@ function renderCards(){
     up.textContent = p.src ? "Nahradit" : "Nahrát grafiku";
     up.addEventListener("click", function(ev){ ev.stopPropagation(); pickTarget = p.id; picker.value=""; picker.click(); });
     acts.appendChild(up);
-    if(p.src){
+    if(p.local){
       var rm = document.createElement("button"); rm.className="btn"; rm.textContent="Odebrat";
       rm.addEventListener("click", function(ev){
         ev.stopPropagation();
-        p.src = null; p.px = null; p.demo = false; dbDel(p.id);
+        dbDel(p.id);
+        p.local = false; p.asset = false; p.src = null; p.px = null; p.pdf = null; p.demo = false;
         try{ localStorage.setItem("stanek-seeded","1"); }catch(e){}
         refresh();
+        restoreDefault(p).then(refresh);
       });
       acts.appendChild(rm);
     }
@@ -842,12 +849,66 @@ function loadPdf(file, p){
   });
 }
 
+/* ===== grafika dodaná v repozitáři =====
+   assets/panels.json mapuje id panelu na soubor; kdokoli otevře odkaz, uvidí ji.
+   Vlastní nahraná grafika (IndexedDB) má vždy přednost. */
+var MANIFEST = null;
+
+function loadImageUrl(url, p){
+  return new Promise(function(res, rej){
+    var im = new Image();
+    im.onload = function(){
+      p.src = url; p.px = [im.naturalWidth, im.naturalHeight];
+      p.pdf = null; p.demo = false; p.asset = true; res();
+    };
+    im.onerror = function(){ rej(new Error(url)); };
+    im.src = url;
+  });
+}
+function loadPdfUrl(url, p){
+  return fetch(url).then(function(r){
+    if(!r.ok) throw new Error(url);
+    return r.blob();
+  }).then(function(b){
+    return loadPdf(new File([b], url.split("/").pop(), {type:"application/pdf"}), p);
+  }).then(function(){ p.asset = true; });
+}
+function loadOneAsset(id){
+  var url = MANIFEST && MANIFEST[id];
+  if(!url || !P[id]) return Promise.resolve(false);
+  var job = /\.pdf(\?|$)/i.test(url) ? loadPdfUrl(url, P[id]) : loadImageUrl(url, P[id]);
+  return job.then(function(){ return true; }, function(){ return false; });
+}
+function loadAssets(){
+  return fetch("assets/panels.json", {cache:"no-cache"}).then(function(r){
+    if(!r.ok) throw new Error("bez manifestu");
+    return r.json();
+  }).then(function(man){
+    MANIFEST = man;
+    return Promise.all(Object.keys(man)
+      .filter(function(id){ return P[id] && !P[id].local; })
+      .map(loadOneAsset));
+  }).catch(function(){ /* soubor:// nebo prázdné assets – zůstanou ukázky */ });
+}
+
+/* po smazání vlastní grafiky se vrátí ta z repozitáře, jinak ukázka */
+function restoreDefault(p){
+  return loadOneAsset(p.id).then(function(ok){
+    if(ok) return;
+    var cleared = false;
+    try{ cleared = localStorage.getItem("stanek-seeded") === "1"; }catch(e){}
+    if(cleared){ p.src = null; p.px = null; p.pdf = null; p.demo = false; }
+    else { p.src = sampleArt(p.w, p.h, p.art); p.px = null; p.pdf = null; p.demo = true; }
+  });
+}
+
 picker.addEventListener("change", function(){
   var f = picker.files && picker.files[0];
   if(!f || !pickTarget) return;
   var p = P[pickTarget];
   var isPdf = /\.pdf$/i.test(f.name) || f.type === "application/pdf";
   (isPdf ? loadPdf(f, p) : loadImage(f, p)).then(function(){
+    p.local = true; p.asset = false;
     dbPut(p.id, {src:p.src, px:p.px, pdf:p.pdf});
     try{ localStorage.setItem("stanek-seeded","1"); }catch(e){}
     refresh();
@@ -955,20 +1016,25 @@ refresh();
 
 openDB().then(function(db){
   DB = db;
-  if(!DB) return;
+  if(!DB) return null;
   return Promise.all(DEFAULTS.map(function(d){
     return dbGet(d.id).then(function(rec){
-      if(rec && rec.src){ P[d.id].src = rec.src; P[d.id].px = rec.px; P[d.id].demo = false; }
+      if(rec && rec.src){
+        var p = P[d.id];
+        p.src = rec.src; p.px = rec.px; p.pdf = rec.pdf || null;
+        p.demo = false; p.local = true;
+      }
     });
-  })).then(function(){
-    var cleared = false;
-    try{ cleared = localStorage.getItem("stanek-seeded") === "1"; }catch(e){}
-    if(cleared){
-      DEFAULTS.forEach(function(d){ if(P[d.id].demo){ P[d.id].src = null; P[d.id].demo = false; } });
-    }
-    refresh();
-  });
-});
+  }));
+}).then(function(){
+  var cleared = false;
+  try{ cleared = localStorage.getItem("stanek-seeded") === "1"; }catch(e){}
+  if(cleared){
+    DEFAULTS.forEach(function(d){ if(P[d.id].demo){ P[d.id].src = null; P[d.id].demo = false; } });
+  }
+  refresh();
+  return loadAssets();
+}).then(function(){ refresh(); });
 
 if(document.fonts && document.fonts.ready){
   document.fonts.ready.then(function(){
