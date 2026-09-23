@@ -349,13 +349,13 @@ function saveUI(){
   try{
     var d = {};
     Object.keys(P).forEach(function(k){ d[k] = {w:P[k].w, h:P[k].h}; });
-    localStorage.setItem("stanek-cfg-2", JSON.stringify({dims:d, ui:{
+    localStorage.setItem("stanek-cfg-4", JSON.stringify({dims:d, ui:{
       tv:ui.tv, counter:ui.counter, fascia:ui.fascia, cut:ui.cut, tvSize:ui.tvSize, tvPos:ui.tvPos}}));
   }catch(e){}
 }
 function loadUI(){
   try{
-    var raw = localStorage.getItem("stanek-cfg-2"); if(!raw) return;
+    var raw = localStorage.getItem("stanek-cfg-4"); if(!raw) return;
     var o = JSON.parse(raw);
     if(o.dims) Object.keys(o.dims).forEach(function(k){
       if(P[k]){ P[k].w = o.dims[k].w; P[k].h = o.dims[k].h; } });
@@ -566,7 +566,7 @@ function render3d(){
     }
 
     // pult
-    var cx = W/2-90, cz = D/2-120;
+    var cx = -(W/2-90), cz = D/2-120;
     [G.cFront,G.cTop,G.cSideL,G.cSideR].forEach(function(e){ e.hidden = !ui.counter; });
     put(G.cFront, cw, chh, cx, EYE-chh/2, cz+cd/2, 0, 0);
     put(G.cTop, cw, cd, cx, EYE-chh, cz, 0, 90);
@@ -579,9 +579,9 @@ function render3d(){
     var tw = P.tv.w, th = P.tv.h, bez = 3, ctr = 140;
     [G.tvFrame,G.tvPole,G.tvBase].forEach(function(e){ e.hidden = !ui.tv; });
     var tx, tz, tr;
-    if(ui.tvPos === "back"){ tx = -W/2+tw/2+50; tz = -D/2+16; tr = 0; }
-    else if(ui.tvPos === "left"){ tx = -W/2+16; tz = -D/2+tw/2+50; tr = 90; }
-    else { tx = W/2-16; tz = -D/2+tw/2+50; tr = -90; }
+    if(ui.tvPos === "back"){ tx = W/2-tw/2-50; tz = -D/2+16; tr = 0; }
+    else if(ui.tvPos === "left"){ tx = -W/2+16; tz = D/2-tw/2-40; tr = 90; }
+    else { tx = W/2-16; tz = D/2-tw/2-40; tr = -90; }
     put(G.tvFrame, tw+bez*2, th+bez*2, tx, EYE-ctr, tz, tr, 0);
     var ff = G.tvFrame.querySelector(".face");
     ff.style.border = bez+"px solid #101214"; ff.style.backgroundColor = "#05080B";
