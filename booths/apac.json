@@ -4,6 +4,8 @@
   "sub": "1 stěna · 1,90 × 2,50 m",
   "jira": "IPTV-6702",
   "layout": "wall",
+  "versions": ["v1", "v2"],
+  "defaultVersion": "v2",
   "panels": {
     "back": {"w": 190, "h": 250, "name": "Stěna"},
     "tv": {}

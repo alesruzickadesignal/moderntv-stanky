@@ -58,6 +58,17 @@ FUTURECOM zapsaná přímo v `src/booth.html` — při změně `booths/futurecom
 2. Náhledy grafiky dej do `stanek-<id>/assets/` (názvy viz `stanek-futurecom/assets/README.md`).
 3. `python3 build.py` — vznikne `stanek-<id>/` a odkaz v rozcestníku.
 
+## Verze grafiky
+
+Stánek může mít víc verzí grafiky: v `booths/<id>.json` `"versions": ["v1", "v2"]` (první = základ,
+tedy `assets/`) a volitelně `"defaultVersion"` (bez něj platí poslední). Soubory verze leží v
+`stanek-<id>/assets/<verze>/` a přebíjejí jen panely, které obsahují; zbytek se bere ze základu.
+`build.py` je zapíše do `panels.json` pod `versions`. V hlavičce je přepínač v1 | v2, adresa
+`?v=1` / `?v=2` (i `?v=v1`) verzi vybere a přepínač ji přepisuje v URL bez znovunačtení;
+neznámá hodnota nebo žádná = výchozí verze. Nahraná grafika se ukládá zvlášť pro každou verzi
+(základ `stanek-<id>`, ostatní `stanek-<id>-<verze>`); pořadí: nahraná > verze z repozitáře > základ > ukázka.
+Stánky bez `versions` se chovají jako dřív.
+
 Úložiště v prohlížeči (IndexedDB `stanek-<id>`, localStorage `stanek-<id>-cfg`
 a `stanek-<id>-seeded`) je pro každý stánek zvlášť — stánky sdílí jeden origin.
 

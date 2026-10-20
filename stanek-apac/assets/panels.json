@@ -1,4 +1,9 @@
 {
   "back": "assets/back.jpg",
-  "tv": "assets/tv.jpg"
+  "tv": "assets/tv.jpg",
+  "versions": {
+    "v2": {
+      "back": "assets/v2/back.jpg"
+    }
+  }
 }

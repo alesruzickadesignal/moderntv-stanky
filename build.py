@@ -71,29 +71,43 @@ span{font-size:13px; color:var(--dim)}
 """
 
 
-def scan_assets(out, panels):
-    """Poskládá <stánek>/assets/panels.json z toho, co leží v <stánek>/assets/."""
-    assets = out / "assets"
+def scan_dir(d, out, panels, notes):
+    """Panelové soubory v jedné složce -> {panel: cesta relativně ke stránce stánku}."""
     lookup = {name: pid for pid, names in PANEL_NAMES.items() for name in names}
-    found, notes = {}, []
-    for f in sorted(assets.glob("*")) if assets.is_dir() else []:
+    found = {}
+    for f in sorted(d.glob("*")) if d.is_dir() else []:
         if f.suffix.lower() not in EXTS:
             continue
         pid = lookup.get(f.name[: -len(f.suffix)].lower())
         if pid is None or pid not in panels:
-            notes.append(f"  ! {f.name} – název neodpovídá žádnému panelu stánku, přeskočeno")
+            notes.append(f"  ! {f.relative_to(out)} – název neodpovídá žádnému panelu stánku, přeskočeno")
             continue
         if pid in found:
-            notes.append(f"  ! {f.name} – pro panel {pid} už soubor je, přeskočeno")
+            notes.append(f"  ! {f.relative_to(out)} – pro panel {pid} už soubor je, přeskočeno")
             continue
         size = f.stat().st_size
         if size >= GH_LIMIT:
-            notes.append(f"  ! {f.name} – {size/1024**2:.0f} MB, GitHub to odmítne (limit 100 MB)")
+            notes.append(f"  ! {f.relative_to(out)} – {size/1024**2:.0f} MB, GitHub to odmítne (limit 100 MB)")
             continue
         if size >= GH_WARN:
-            notes.append(f"  ~ {f.name} – {size/1024**2:.0f} MB, GitHub bude varovat; zmenši náhled")
-        found[pid] = f.relative_to(out).as_posix()   # cesta relativně ke stránce stánku
-        notes.append(f"  + {pid:<8} {f.name} ({size/1024:,.0f} kB)")
+            notes.append(f"  ~ {f.relative_to(out)} – {size/1024**2:.0f} MB, GitHub bude varovat; zmenši náhled")
+        found[pid] = f.relative_to(out).as_posix()
+        notes.append(f"  + {pid:<8} {f.relative_to(out)} ({size/1024:,.0f} kB)")
+    return found
+
+
+def scan_assets(out, cfg):
+    """Poskládá <stánek>/assets/panels.json. Verze (cfg.versions; první = základ, tedy
+    assets/) přebíjejí soubory podsložkou assets/<verze>/."""
+    panels, assets, notes = cfg["panels"], out / "assets", []
+    found = scan_dir(assets, out, panels, notes)
+    vers = {}
+    for v in cfg.get("versions", [])[1:]:
+        o = scan_dir(assets / v, out, panels, notes)
+        if o:
+            vers[v] = o
+    if vers:
+        found["versions"] = vers
 
     assets.mkdir(parents=True, exist_ok=True)
     (assets / "panels.json").write_text(json.dumps(found, indent=2, ensure_ascii=False) + "\n",
@@ -128,8 +142,8 @@ def build_booth(src, cfg):
     page.write_text(doc, encoding="utf-8")
     print(f"{page} ({page.stat().st_size:,} B), do <head> přesunuto tagů: {len(head)}")
 
-    found, notes = scan_assets(out, cfg["panels"])
-    print(f"{out}/assets/panels.json: {len(found)} z {len(cfg['panels'])} panelů má grafiku v repozitáři")
+    found, notes = scan_assets(out, cfg)
+    print(f"{out}/assets/panels.json: {len([k for k in found if k != 'versions'])} z {len(cfg['panels'])} panelů má grafiku v repozitáři")
     for n in notes:
         print(n)
     return out

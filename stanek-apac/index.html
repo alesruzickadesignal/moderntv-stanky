@@ -15,7 +15,7 @@ img{max-width:100%}
 <title>Stánek APAC</title>
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@100..125,400..700&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
-<script>window.BOOTH = {"id": "apac", "title": "Stánek APAC", "sub": "1 stěna · 1,90 × 2,50 m", "jira": "IPTV-6702", "layout": "wall", "panels": {"back": {"w": 190, "h": 250, "name": "Stěna"}, "tv": {}}, "tv": {"size": 55, "top": 50}, "table": {"d": 80, "h": 75, "dist": 90, "chairs": 2}};</script>
+<script>window.BOOTH = {"id": "apac", "title": "Stánek APAC", "sub": "1 stěna · 1,90 × 2,50 m", "jira": "IPTV-6702", "layout": "wall", "versions": ["v1", "v2"], "defaultVersion": "v2", "panels": {"back": {"w": 190, "h": 250, "name": "Stěna"}, "tv": {}}, "tv": {"size": 55, "top": 50}, "table": {"d": 80, "h": 75, "dist": 90, "chairs": 2}};</script>
 </head>
 <body>
 <style>
@@ -69,6 +69,11 @@ header.bar{
 header.bar h1{font-size:19px; font-weight:700}
 header.bar .sub{font-size:12.5px; color:var(--dim); letter-spacing:.02em}
 header.bar .spacer{flex:1 1 40px}
+.vers{display:inline-flex; border:1px solid var(--line); border-radius:999px; overflow:hidden; align-self:center}
+.vers button{border:0; background:none; padding:3px 12px; font-size:12px; font-weight:600; letter-spacing:.04em; cursor:pointer; color:var(--dim)}
+.vers button+button{border-left:1px solid var(--line)}
+.vers button[aria-pressed="true"]{background:var(--accent-bright); color:#24170A}
+.vers button:focus-visible{outline:2px solid var(--accent-bright); outline-offset:-2px}
 .ticket{font-size:11.5px; letter-spacing:.09em; text-transform:uppercase; color:var(--accent); font-weight:600}
 
 main{display:flex; flex-direction:column; flex:1; min-height:0}
@@ -218,6 +223,7 @@ details.notes b{color:var(--text); font-weight:600}
 <div class="app">
   <header class="bar">
     <h1 id="bTitle">Stánek FUTURECOM</h1>
+    <span class="vers" id="vers" role="group" aria-label="Verze grafiky" hidden></span>
     <span class="sub" id="bSub">4,00 × 3,00 m · stěny 3,00 m + lišta 0,70 m = celkem 3,70 m</span>
     <span class="spacer"></span>
     <span class="ticket" id="bJira">IPTV-6427</span>
@@ -364,10 +370,20 @@ var cam = {rx:7, ry:-14, zoom:0};
 /* všechny stánky sdílí origin github.io – klíče musí nést id stánku */
 var KEY = "stanek-" + B.id, CFG_KEY = KEY + "-cfg", SEEDED_KEY = KEY + "-seeded";
 var DB = null;
+/* verze grafiky (jen stánky s B.versions): ?v=1 / ?v=v1; bez parametru nejnovější.
+   První verze = základ (assets/, DB "stanek-<id>"), ostatní assets/<verze>/ a DB "stanek-<id>-<verze>". */
+var VERS = B.versions && B.versions.length ? B.versions : null, ver = null;
+if(VERS){
+  var vq = "";
+  try{ vq = new URLSearchParams(location.search).get("v") || ""; }catch(e){}
+  vq = /^\d+$/.test(vq) ? "v" + vq : vq;
+  ver = VERS.indexOf(vq) >= 0 ? vq : (B.defaultVersion || VERS[VERS.length-1]);
+}
+function dbName(){ return ver && ver !== VERS[0] ? KEY + "-" + ver : KEY; }
 function openDB(){
   return new Promise(function(res){
     try{
-      var r = indexedDB.open(KEY, 1);
+      var r = indexedDB.open(dbName(), 1);
       r.onupgradeneeded = function(){ r.result.createObjectStore("img"); };
       r.onsuccess = function(){ res(r.result); };
       r.onerror = function(){ res(null); };
@@ -1077,10 +1093,17 @@ function loadPdf(file, p){
    Vlastní nahraná grafika (IndexedDB) má vždy přednost. */
 var MANIFEST = null;
 
+var gen = 0;   // čítač přepnutí verze – zpožděné načtení staré verze se zahodí
+function assetUrl(id){
+  var o = MANIFEST && ver && MANIFEST.versions && MANIFEST.versions[ver];
+  return (o && o[id]) || (MANIFEST && MANIFEST[id]);
+}
 function loadImageUrl(url, p){
+  var g = gen;
   return new Promise(function(res, rej){
     var im = new Image();
     im.onload = function(){
+      if(g !== gen) return res();
       p.src = url; p.px = [im.naturalWidth, im.naturalHeight];
       p.pdf = null; p.demo = false; p.asset = true; res();
     };
@@ -1097,7 +1120,7 @@ function loadPdfUrl(url, p){
   }).then(function(){ p.asset = true; });
 }
 function loadOneAsset(id){
-  var url = MANIFEST && MANIFEST[id];
+  var url = assetUrl(id);
   if(!url || !B.panels[id]) return Promise.resolve(false);
   var job = /\.pdf(\?|$)/i.test(url) ? loadPdfUrl(url, P[id]) : loadImageUrl(url, P[id]);
   return job.then(function(){ return true; }, function(){ return false; });
@@ -1108,7 +1131,7 @@ function loadAssets(){
     return r.json();
   }).then(function(man){
     MANIFEST = man;
-    var todo = Object.keys(man).filter(function(id){ return B.panels[id] && !P[id].local; });
+    var todo = DEFAULTS.map(function(d){ return d.id; }).filter(function(id){ return assetUrl(id) && !P[id].local; });
     /* tisková PDF se stahují i pár sekund – ukázku rovnou pryč, ať nepřeskočí */
     todo.forEach(function(id){
       var p = P[id];
@@ -1233,6 +1256,31 @@ tvSizeEl.addEventListener("change", function(){
 });
 tvPosEl.addEventListener("change", function(){ ui.tvPos = tvPosEl.value; saveUI(); render3d(); });
 
+/* ============ verze grafiky ============ */
+function setVersion(v, first){
+  ver = v; gen++;
+  Array.prototype.forEach.call(versEl.children, function(b){ b.setAttribute("aria-pressed", String(b.dataset.v === v)); });
+  if(first) return;
+  try{ var u = new URL(location.href); u.searchParams.set("v", v.replace(/^v/, "")); history.replaceState(null, "", u); }catch(e){}
+  if(DB){ try{ DB.close(); }catch(e){} DB = null; }
+  DEFAULTS.forEach(function(d){
+    var p = P[d.id];
+    p.src = null; p.px = null; p.pdf = null; p.demo = false; p.local = false; p.asset = false; p.loading = false;
+  });
+  seedSamples(); refresh(); loadVersion();
+}
+var versEl = document.getElementById("vers");
+if(VERS){
+  versEl.hidden = false;
+  VERS.forEach(function(v){
+    var b = document.createElement("button");
+    b.type = "button"; b.dataset.v = v; b.textContent = v;
+    b.addEventListener("click", function(){ if(v !== ver) setVersion(v); });
+    versEl.appendChild(b);
+  });
+  setVersion(ver, true);
+}
+
 /* ============ boot ============ */
 function refresh(){ render3d(); renderCam(); renderCards(); }
 
@@ -1251,7 +1299,10 @@ renderCam();
 seedSamples();
 refresh();
 
-openDB().then(function(db){
+function loadVersion(){
+  var g = gen;
+  return openDB().then(function(db){
+  if(g !== gen){ if(db) db.close(); return null; }
   DB = db;
   if(!DB) return null;
   return Promise.all(DEFAULTS.map(function(d){
@@ -1264,6 +1315,7 @@ openDB().then(function(db){
     });
   }));
 }).then(function(){
+  if(g !== gen) return;
   var cleared = false;
   try{ cleared = localStorage.getItem(SEEDED_KEY) === "1"; }catch(e){}
   if(cleared){
@@ -1271,7 +1323,9 @@ openDB().then(function(db){
   }
   refresh();
   return loadAssets();
-}).then(function(){ refresh(); });
+}).then(function(){ if(g === gen) refresh(); });
+}
+loadVersion();
 
 if(document.fonts && document.fonts.ready){
   document.fonts.ready.then(function(){
