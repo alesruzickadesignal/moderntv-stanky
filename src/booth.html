@@ -183,6 +183,8 @@ details.notes li{font-size:12px; color:var(--dim); line-height:1.5}
 details.notes b{color:var(--text); font-weight:600}
 
 .toggles{display:flex; flex-wrap:wrap; gap:6px}
+/* co patří jen k jednomu typu stánku: "u" = tři stěny, "wall" = jedna stěna */
+:root[data-layout="wall"] .u-only, :root:not([data-layout="wall"]) .wall-only{display:none !important}
 
 @media (min-width:900px){
   html,body{height:100%}
@@ -196,11 +198,28 @@ details.notes b{color:var(--text); font-weight:600}
 
 <div class="app">
   <header class="bar">
-    <h1>Stánek FUTURECOM</h1>
-    <span class="sub">4,00 × 3,00 m · stěny 3,00 m + lišta 0,70 m = celkem 3,70 m</span>
+    <h1 id="bTitle">Stánek FUTURECOM</h1>
+    <span class="sub" id="bSub">4,00 × 3,00 m · stěny 3,00 m + lišta 0,70 m = celkem 3,70 m</span>
     <span class="spacer"></span>
-    <span class="ticket">IPTV-6427</span>
+    <span class="ticket" id="bJira">IPTV-6427</span>
   </header>
+  <script>
+  /* Konfiguraci stánku vkládá build.py z booths/<id>.json. Bez ní (samostatně
+     publikovaný soubor, Claude Artifact) platí FUTURECOM – musí sedět s booths/futurecom.json. */
+  window.BOOTH = window.BOOTH || {
+    id:"futurecom", title:"Stánek FUTURECOM",
+    sub:"4,00 × 3,00 m · stěny 3,00 m + lišta 0,70 m = celkem 3,70 m",
+    jira:"IPTV-6427", layout:"u",
+    panels:{back:{w:400,h:300}, left:{w:300,h:300}, right:{w:300,h:300},
+            fascia:{w:200,h:70}, counter:{w:108,h:95}, tv:{}},
+    tv:{size:55, pos:"back"}
+  };
+  document.documentElement.setAttribute("data-layout", BOOTH.layout);
+  document.title = BOOTH.title;
+  document.getElementById("bTitle").textContent = BOOTH.title;
+  document.getElementById("bSub").textContent = BOOTH.sub;
+  document.getElementById("bJira").textContent = BOOTH.jira;
+  </script>
 
   <main>
     <div class="stagewrap">
@@ -211,9 +230,9 @@ details.notes b{color:var(--text); font-weight:600}
         <button class="chip" data-view="front">Čelní</button>
         <button class="chip" data-view="l34">¾ zleva</button>
         <button class="chip" data-view="r34">¾ zprava</button>
-        <button class="chip" data-view="top">Půdorys</button>
+        <button class="chip u-only" data-view="top">Půdorys</button>
         <button class="chip" id="unfoldBtn" aria-pressed="false">Nárys</button>
-        <button class="chip" id="cutBtn" aria-pressed="false">Řez</button>
+        <button class="chip u-only" id="cutBtn" aria-pressed="false">Řez</button>
         <button class="chip" id="dimsBtn" aria-pressed="false">Rozměry</button>
       </div>
       <div class="hint">Táhnutím otočíte · kolečkem přiblížíte</div>
@@ -230,13 +249,13 @@ details.notes b{color:var(--text); font-weight:600}
       <div class="sechead"><h2>Vybavení</h2></div>
       <div class="toggles">
         <button class="chip" id="tTv" aria-pressed="true">Televize</button>
-        <button class="chip" id="tCounter" aria-pressed="true">Pult</button>
-        <button class="chip" id="tFascia" aria-pressed="true">Lišta</button>
+        <button class="chip u-only" id="tCounter" aria-pressed="true">Pult</button>
+        <button class="chip u-only" id="tFascia" aria-pressed="true">Lišta</button>
         <select id="tvSize" aria-label="Úhlopříčka TV">
           <option value="43">43″</option><option value="50">50″</option>
           <option value="55" selected>55″</option><option value="65">65″</option>
         </select>
-        <select id="tvPos" aria-label="Umístění TV">
+        <select id="tvPos" class="u-only" aria-label="Umístění TV">
           <option value="back">TV u zadní stěny</option>
           <option value="left">TV u levé stěny</option>
           <option value="right">TV u pravé stěny</option>
@@ -260,20 +279,23 @@ details.notes b{color:var(--text); font-weight:600}
             ukáže zjištěné měřítko (1:1, 1:10 …) a spadávku navíc oproti čistému formátu.
             Vykresluje se první stránka.</li>
           <li><b>PPI</b> u bitmap se počítá na finální rozměr panelu. Potřebné rozlišení plyne z pozorovací
-            vzdálenosti (1′ zorného úhlu): stěny z ~1,5 m stačí ≈ 23 PPI, lišta z ~2,5 m ≈ 14 PPI,
-            čelo pultu z ~0,6 m ≈ 57 PPI.</li>
+            vzdálenosti (1′ zorného úhlu): stěny z ~1,5 m stačí ≈ 23 PPI<span class="u-only">, lišta z ~2,5 m ≈ 14 PPI,
+            čelo pultu z ~0,6 m ≈ 57 PPI</span>.</li>
           <li><b>Doporučený formát</b> u každého panelu odpovídá zvyklosti tiskáren — data v měřítku
-            <b>1:10 při 300 DPI</b>, tedy 4 724 × 3 543 px pro stěnu 400 × 300 cm.</li>
+            <b>1:10 při 300 DPI</b><span class="u-only">, tedy 4 724 × 3 543 px pro stěnu 400 × 300 cm</span>.</li>
           <li><b>Poměr stran</b> hlídá deformaci: náhled grafiku roztahuje na plný panel, stejně jako
             tisk. Varování znamená, že se obraz zkreslí nebo bude nutné oříznout.</li>
           <li><b>Spadávka</b> u textilu se SEG lištou obvykle 5 cm po obvodu + bezpečná zóna 8 cm
-            od hrany pro texty a loga. Potvrdit s dodavatelem stánku podle přiloženého O.S.</li>
-          <li><b>Výchozí rozměry</b> odpovídají technickému listu stánku: půdorys
+            od hrany pro texty a loga. Potvrdit s dodavatelem stánku<span class="u-only"> podle přiloženého O.S</span>.</li>
+          <li class="u-only"><b>Výchozí rozměry</b> odpovídají technickému listu stánku: půdorys
             4,00 × 3,00 m, stěny 3,00 m vysoké, lišta (placa MDF) 2,00 × 0,70 m, čelo pultu
             1,08 × 0,95 m, celková výška 3,70 m, grafitový koberec. Rozměr TV stojanu je
             odhad — přepiš ho, až bude známý.</li>
-          <li><b>Řez</b> odkryje stěnu, za kterou stojí kamera, aby šlo nahlédnout dovnitř.
+          <li class="u-only"><b>Řez</b> odkryje stěnu, za kterou stojí kamera, aby šlo nahlédnout dovnitř.
             Vypnutý (výchozí) = stánek je plný, jak ho uvidí návštěvník.</li>
+          <li class="wall-only"><b>Výchozí rozměry</b> odpovídají podkladu grafiky (viz záhlaví).
+            Televize visí na stěně uprostřed volného pole v grafice; úhlopříčka se dá přepnout
+            a pozice se drží i při změně rozměru stěny.</li>
         </ul>
       </details>
     </aside>
@@ -289,7 +311,8 @@ details.notes b{color:var(--text); font-weight:600}
 
 /* ============ model ============ */
 var EYE = 150;               // výška očí v cm
-var DEFAULTS = [
+var B = window.BOOTH, WALL = B.layout === "wall";
+var CATALOG = [
   {id:"back",    name:"Zadní stěna",       w:400, h:300, dist:150, kind:"wall",  art:"stats"},
   {id:"left",    name:"Levá stěna",        w:300, h:300, dist:150, kind:"wall",  art:"hero"},
   {id:"right",   name:"Pravá stěna",       w:300, h:300, dist:150, kind:"wall",  art:"grid"},
@@ -297,23 +320,29 @@ var DEFAULTS = [
   {id:"counter", name:"Čelo pultu (balcão)",w:108, h:95,  dist:60,  kind:"trim",  art:"mark"},
   {id:"tv",      name:"TV – obrazovka",    w:122, h:69,  dist:150, kind:"screen",art:"ui"}
 ];
+/* panely tohohle stánku, v pořadí katalogu, s rozměry z konfigurace */
+var DEFAULTS = CATALOG.filter(function(d){ return B.panels[d.id]; }).map(function(d){
+  return Object.assign({}, d, B.panels[d.id]);
+});
 var TVS = {43:[95.2,53.6], 50:[110.7,62.3], 55:[121.8,68.5], 65:[143.9,81.0]};
 
-var P = {};                  // id -> panel state
-DEFAULTS.forEach(function(d){
+var P = {};                  // id -> panel state (i panely, které stánek nemá – scéna s nimi počítá)
+CATALOG.concat(DEFAULTS).forEach(function(d){
   P[d.id] = Object.assign({}, d, {src:null, px:null, pdf:null, demo:false, local:false, asset:false, loading:false});
 });
 
-var ui = {tv:true, counter:true, fascia:true, dims:false, unfold:false, cut:false, tvSize:55, tvPos:"back", sel:null};
+var ui = {tv:true, counter:true, fascia:true, dims:false, unfold:false, cut:false, tvSize:B.tv.size, tvPos:B.tv.pos || "back", sel:null};
 var PERSP = 2600;
 var cam = {rx:7, ry:-14, zoom:0};
 
 /* ============ storage (best effort) ============ */
+/* všechny stánky sdílí origin github.io – klíče musí nést id stánku */
+var KEY = "stanek-" + B.id, CFG_KEY = KEY + "-cfg", SEEDED_KEY = KEY + "-seeded";
 var DB = null;
 function openDB(){
   return new Promise(function(res){
     try{
-      var r = indexedDB.open("stanek-futurecom", 1);
+      var r = indexedDB.open(KEY, 1);
       r.onupgradeneeded = function(){ r.result.createObjectStore("img"); };
       r.onsuccess = function(){ res(r.result); };
       r.onerror = function(){ res(null); };
@@ -333,13 +362,13 @@ function saveUI(){
   try{
     var d = {};
     Object.keys(P).forEach(function(k){ d[k] = {w:P[k].w, h:P[k].h}; });
-    localStorage.setItem("stanek-cfg-4", JSON.stringify({dims:d, ui:{
+    localStorage.setItem(CFG_KEY, JSON.stringify({dims:d, ui:{
       tv:ui.tv, counter:ui.counter, fascia:ui.fascia, cut:ui.cut, tvSize:ui.tvSize, tvPos:ui.tvPos}}));
   }catch(e){}
 }
 function loadUI(){
   try{
-    var raw = localStorage.getItem("stanek-cfg-4"); if(!raw) return;
+    var raw = localStorage.getItem(CFG_KEY); if(!raw) return;
     var o = JSON.parse(raw);
     if(o.dims) Object.keys(o.dims).forEach(function(k){
       if(P[k]){ P[k].w = o.dims[k].w; P[k].h = o.dims[k].h; } });
@@ -495,7 +524,7 @@ function tag(el, text){
 }
 
 function render3d(){
-  var W = P.back.w, H = P.back.h, D = P.left.w;
+  var W = P.back.w, H = P.back.h, D = WALL ? 0 : P.left.w;
   var hL = P.left.h, hR = P.right.h;
 
   var fw = P.fascia.w, fh = P.fascia.h;
@@ -508,6 +537,9 @@ function render3d(){
   paint(G.fascia, P.fascia); tag(G.fascia, fw+" × "+fh+" cm");
   paint(G.cFront, P.counter);tag(G.cFront, cw+" × "+chh+" cm");
 
+  /* samostatná stěna: bez bočnic, lišty a pultu */
+  [G.left, G.right].forEach(function(e){ e.hidden = WALL; });
+
   if(ui.unfold){
     /* rozložené stěny: všechno čelně vedle sebe, bez podlahy a vybavení */
     only3d.forEach(function(e){ e.hidden = true; });
@@ -515,10 +547,10 @@ function render3d(){
     put(G.back,  W,  H,  0,    EYE-H/2,  0, 0, 0);
     put(G.left,  D,  hL, -off, EYE-hL/2, 0, 0, 0);
     put(G.right, D,  hR, off,  EYE-hR/2, 0, 0, 0);
-    G.fascia.hidden = false;
+    G.fascia.hidden = WALL;
     G.fasL.hidden = true; G.fasR.hidden = true;
     put(G.fascia, fw, fh, 0, EYE-(H+gap+fh/2), 0, 0, 0);
-    G.cFront.hidden = false;
+    G.cFront.hidden = WALL;
     put(G.cFront, cw, chh, 0, EYE+gap+chh/2, 0, 0, 0);
     G.left.querySelector(".face").style.filter = "none";
     G.right.querySelector(".face").style.filter = "none";
@@ -526,6 +558,7 @@ function render3d(){
     only3d.forEach(function(e){ e.hidden = false; });
     put(G.hall, W+700, 520, 0, EYE, D/2+260, 0, 90);
     put(G.carpet, W, D, 0, EYE-1, 0, 0, 90);
+    G.carpet.hidden = WALL;
 
     put(G.back, W, H, 0, EYE-H/2, -D/2, 0, 0);
     put(G.left, D, hL, -W/2, EYE-hL/2, 0, 90, 0);
@@ -537,10 +570,11 @@ function render3d(){
 
     /* placa MDF 2,00 × 0,70 m je užší než čelo stánku – po stranách jsou hladké
        bílé panely, stejně jako na vizualizaci od Apollo */
-    G.fascia.hidden = !ui.fascia;
+    var showFascia = ui.fascia && !WALL;
+    G.fascia.hidden = !showFascia;
     var fy = EYE-(H+fh/2), side = Math.max(0, (W-fw)/2);
     put(G.fascia, fw, fh, 0, fy, D/2, 0, 0);
-    [G.fasL, G.fasR].forEach(function(e){ e.hidden = !ui.fascia || side < 2; });
+    [G.fasL, G.fasR].forEach(function(e){ e.hidden = !showFascia || side < 2; });
     if(side >= 2){
       put(G.fasL, side, fh, -(fw/2+side/2), fy, D/2, 0, 0);
       put(G.fasR, side, fh,  (fw/2+side/2), fy, D/2, 0, 0);
@@ -551,7 +585,7 @@ function render3d(){
 
     // pult
     var cx = -(W/2-90), cz = D/2-120;
-    [G.cFront,G.cTop,G.cSideL,G.cSideR].forEach(function(e){ e.hidden = !ui.counter; });
+    [G.cFront,G.cTop,G.cSideL,G.cSideR].forEach(function(e){ e.hidden = !ui.counter || WALL; });
     put(G.cFront, cw, chh, cx, EYE-chh/2, cz+cd/2, 0, 0);
     put(G.cTop, cw, cd, cx, EYE-chh, cz, 0, 90);
     G.cTop.querySelector(".face").style.background = "#E8EAE4";
@@ -560,10 +594,17 @@ function render3d(){
     [G.cSideL,G.cSideR].forEach(function(e){ e.querySelector(".face").style.background = "#CBD0C6"; });
 
     // televize
-    var tw = P.tv.w, th = P.tv.h, bez = 3, ctr = 140;
+    var tw = P.tv.w, th = P.tv.h, bez = WALL ? 1 : 3, ctr = 140;
     [G.tvFrame,G.tvPole,G.tvBase].forEach(function(e){ e.hidden = !ui.tv; });
     var tx, tz, tr;
-    if(ui.tvPos === "back"){ tx = W/2-tw/2-50; tz = -D/2+16; tr = 0; }
+    if(WALL){
+      /* TV visí na stěně uprostřed; střed v B.tv.centerFromTop cm od horní hrany
+         původní stěny – grafika se roztahuje s panelem, takže se přepočítá poměrem */
+      tx = 0; tz = -D/2+4; tr = 0;
+      ctr = H - B.tv.centerFromTop * H / B.panels.back.h;
+      G.tvPole.hidden = true; G.tvBase.hidden = true;
+    }
+    else if(ui.tvPos === "back"){ tx = W/2-tw/2-50; tz = -D/2+16; tr = 0; }
     else if(ui.tvPos === "left"){ tx = -W/2+16; tz = D/2-tw/2-40; tr = 90; }
     else { tx = W/2-16; tz = D/2-tw/2-40; tr = -90; }
     put(G.tvFrame, tw+bez*2, th+bez*2, tx, EYE-ctr, tz, tr, 0);
@@ -585,16 +626,16 @@ function render3d(){
 /* kamera se vždy dopočítá tak, aby se stánek vešel do plochy náhledu;
    cam.zoom je jen uživatelská odchylka od tohoto výchozího odstupu */
 function fitBase(){
-  var W = P.back.w, D = P.left.w, H = P.back.h;
+  var W = P.back.w, D = WALL ? 0 : P.left.w, H = P.back.h;
   var r = cam.ry * Math.PI/180, rx = cam.rx * Math.PI/180;
   var effW, effH;
   if(ui.unfold){
     effW = W + 2*D + 90;
-    effH = H + P.fascia.h + P.counter.h + 70;
+    effH = WALL ? H + 70 : H + P.fascia.h + P.counter.h + 70;
   } else {
     effW = Math.abs(W*Math.cos(r)) + Math.abs(D*Math.sin(r));
     /* placa MDF stojí nad stěnami – do výšky se musí započítat, jinak se ořízne */
-    var top = H + (ui.fascia ? P.fascia.h : 0);
+    var top = H + (ui.fascia && !WALL ? P.fascia.h : 0);
     effH = top*Math.cos(rx) + D*Math.abs(Math.sin(rx)) + 40;
   }
   var box = stage.getBoundingClientRect();
@@ -618,9 +659,11 @@ function occlude(){
 }
 function renderCam(){
   var dolly = fitBase() + cam.zoom;
+  /* samostatnou stěnu vycentrovat na její střed, ne na výšku očí */
+  var lift = WALL ? P.back.h/2 - EYE : 0;
   /* záporné rotateX = pohled shora: kladné by scénu překlopilo a podlaha by se
      dostala před stěny */
-  world.style.transform = "translateZ("+dolly.toFixed(1)+"px) rotateX("+(-cam.rx)+"deg) rotateY("+cam.ry+"deg)";
+  world.style.transform = "translateZ("+dolly.toFixed(1)+"px)" + (lift ? " translateY("+lift+"px)" : "") + " rotateX("+(-cam.rx)+"deg) rotateY("+cam.ry+"deg)";
   occlude();
 }
 if(window.ResizeObserver){ new ResizeObserver(renderCam).observe(stage); }
@@ -754,7 +797,7 @@ function renderCards(){
         ev.stopPropagation();
         dbDel(p.id);
         p.local = false; p.asset = false; p.src = null; p.px = null; p.pdf = null; p.demo = false;
-        try{ localStorage.setItem("stanek-seeded","1"); }catch(e){}
+        try{ localStorage.setItem(SEEDED_KEY,"1"); }catch(e){}
         refresh();
         restoreDefault(p).then(refresh);
       });
@@ -886,7 +929,7 @@ function loadPdfUrl(url, p){
 }
 function loadOneAsset(id){
   var url = MANIFEST && MANIFEST[id];
-  if(!url || !P[id]) return Promise.resolve(false);
+  if(!url || !B.panels[id]) return Promise.resolve(false);
   var job = /\.pdf(\?|$)/i.test(url) ? loadPdfUrl(url, P[id]) : loadImageUrl(url, P[id]);
   return job.then(function(){ return true; }, function(){ return false; });
 }
@@ -896,7 +939,7 @@ function loadAssets(){
     return r.json();
   }).then(function(man){
     MANIFEST = man;
-    var todo = Object.keys(man).filter(function(id){ return P[id] && !P[id].local; });
+    var todo = Object.keys(man).filter(function(id){ return B.panels[id] && !P[id].local; });
     /* tisková PDF se stahují i pár sekund – ukázku rovnou pryč, ať nepřeskočí */
     todo.forEach(function(id){
       var p = P[id];
@@ -915,7 +958,7 @@ function restoreDefault(p){
   return loadOneAsset(p.id).then(function(ok){
     if(ok) return;
     var cleared = false;
-    try{ cleared = localStorage.getItem("stanek-seeded") === "1"; }catch(e){}
+    try{ cleared = localStorage.getItem(SEEDED_KEY) === "1"; }catch(e){}
     if(cleared){ p.src = null; p.px = null; p.pdf = null; p.demo = false; }
     else { p.src = sampleArt(p.w, p.h, p.art); p.px = null; p.pdf = null; p.demo = true; }
   });
@@ -929,7 +972,7 @@ picker.addEventListener("change", function(){
   (isPdf ? loadPdf(f, p) : loadImage(f, p)).then(function(){
     p.local = true; p.asset = false;
     dbPut(p.id, {src:p.src, px:p.px, pdf:p.pdf});
-    try{ localStorage.setItem("stanek-seeded","1"); }catch(e){}
+    try{ localStorage.setItem(SEEDED_KEY,"1"); }catch(e){}
     refresh();
   }, function(err){
     alert(err && err.message ? err.message : "Soubor se nepodařilo načíst.");
@@ -1047,7 +1090,7 @@ openDB().then(function(db){
   }));
 }).then(function(){
   var cleared = false;
-  try{ cleared = localStorage.getItem("stanek-seeded") === "1"; }catch(e){}
+  try{ cleared = localStorage.getItem(SEEDED_KEY) === "1"; }catch(e){}
   if(cleared){
     DEFAULTS.forEach(function(d){ if(P[d.id].demo){ P[d.id].src = null; P[d.id].demo = false; } });
   }

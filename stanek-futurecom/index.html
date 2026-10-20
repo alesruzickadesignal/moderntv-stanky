@@ -1,0 +1,1127 @@
+<!doctype html>
+<html lang="cs">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="description" content="Interaktivní 3D náhled výstavního stánku: nahraj grafiku a zkontroluj rozlišení a poměr stran.">
+<style>
+:root{color-scheme:light dark;
+  padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px)}
+html,body{margin:0}
+body{font:14px system-ui,-apple-system,sans-serif}
+img{max-width:100%}
+[hidden]{display:none!important}
+</style>
+<title>Stánek FUTURECOM</title>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@100..125,400..700&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<script>window.BOOTH = {"id": "futurecom", "title": "Stánek FUTURECOM", "sub": "4,00 × 3,00 m · stěny 3,00 m + lišta 0,70 m = celkem 3,70 m", "jira": "IPTV-6427", "layout": "u", "panels": {"back": {"w": 400, "h": 300}, "left": {"w": 300, "h": 300}, "right": {"w": 300, "h": 300}, "fascia": {"w": 200, "h": 70}, "counter": {"w": 108, "h": 95}, "tv": {}}, "tv": {"size": 55, "pos": "back"}};</script>
+</head>
+<body>
+<style>
+:root{
+  --bg:#F5F2ED; --surface:#FFFFFF; --surface-2:#EBE6DF; --line:#DAD3C9; --line-soft:#E8E3DA;
+  --text:#1A1613; --dim:#665E55; --faint:#968D82;
+  /* firemní oranžová naměřená z nameboardu; --accent je tmavší varianta,
+     aby drobný text na bílé měl kontrast */
+  --accent:#9E550C; --accent-bright:#E4883C; --accent-soft:#FBEBDA;
+  --ok:#2F7A4E; --ok-bg:#E3F0E7; --warn:#7A6006; --warn-bg:#F3EFD9; --bad:#A93A31; --bad-bg:#F8E5E2;
+  --hall-top:#EDEFF1; --hall-bottom:#D2D6DA; --hall-floor:#C6CACE;
+  --blank:#E0DBD3; --blank-line:#C8C2B7;
+  --ring:0 0 0 2px var(--accent-bright);
+  --shadow:0 1px 2px rgba(28,22,16,.05), 0 10px 28px -16px rgba(28,22,16,.28);
+  --r:10px;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#14120F; --surface:#1C1A16; --surface-2:#26221D; --line:#39332B; --line-soft:#2C2721;
+    --text:#EFEAE3; --dim:#A49A8D; --faint:#7F766A;
+    --accent:#EFA05C; --accent-bright:#E4883C; --accent-soft:#3A2410;
+    --ok:#6ECB93; --ok-bg:#1B2A20; --warn:#D8BC57; --warn-bg:#2C2814; --bad:#E58278; --bad-bg:#31201D;
+    --hall-top:#2B2F33; --hall-bottom:#1A1D20; --hall-floor:#232629;
+    --blank:#302C26; --blank-line:#423C34;
+    --shadow:0 1px 2px rgba(0,0,0,.4), 0 12px 32px -18px rgba(0,0,0,.8);
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#14120F; --surface:#1C1A16; --surface-2:#26221D; --line:#39332B; --line-soft:#2C2721;
+  --text:#EFEAE3; --dim:#A49A8D; --faint:#7F766A;
+  --accent:#EFA05C; --accent-bright:#E4883C; --accent-soft:#3A2410;
+  --ok:#6ECB93; --ok-bg:#1B2A20; --warn:#D8BC57; --warn-bg:#2C2814; --bad:#E58278; --bad-bg:#31201D;
+  --hall-top:#2B2F33; --hall-bottom:#1A1D20; --hall-floor:#232629;
+  --blank:#302C26; --blank-line:#423C34;
+  --shadow:0 1px 2px rgba(0,0,0,.4), 0 12px 32px -18px rgba(0,0,0,.8);
+}
+
+body{background:var(--bg); color:var(--text); font-family:"IBM Plex Sans", system-ui, -apple-system, sans-serif; -webkit-font-smoothing:antialiased;}
+*{box-sizing:border-box}
+h1,h2,h3{font-family:"Archivo", "Archivo Expanded", system-ui, sans-serif; font-stretch:112%; margin:0; text-wrap:balance; letter-spacing:-.01em}
+button{font:inherit; color:inherit}
+.mono{font-family:"IBM Plex Mono", ui-monospace, SFMono-Regular, monospace; font-variant-numeric:tabular-nums}
+
+/* ---------- shell ---------- */
+.app{display:flex; flex-direction:column; min-height:100%}
+header.bar{
+  display:flex; flex-wrap:wrap; align-items:baseline; gap:6px 16px;
+  padding-block:14px 12px; padding-inline:16px;
+  border-bottom:1px solid var(--line); background:var(--surface);
+}
+header.bar h1{font-size:19px; font-weight:700}
+header.bar .sub{font-size:12.5px; color:var(--dim); letter-spacing:.02em}
+header.bar .spacer{flex:1 1 40px}
+.ticket{font-size:11.5px; letter-spacing:.09em; text-transform:uppercase; color:var(--accent); font-weight:600}
+
+main{display:flex; flex-direction:column; flex:1; min-height:0}
+
+/* ---------- stage ---------- */
+.stagewrap{position:relative; height:58vh; min-height:340px; border-bottom:1px solid var(--line)}
+.stage{
+  position:absolute; inset:0; overflow:hidden; touch-action:none; cursor:grab;
+  background:linear-gradient(to bottom, var(--hall-top) 0%, var(--hall-top) 34%,
+    var(--hall-bottom) 47%, var(--hall-floor) 52%, var(--hall-floor) 100%);
+  perspective:2600px; perspective-origin:50% 48%;
+}
+.stage:active{cursor:grabbing}
+.stage:focus-visible{outline:2px solid var(--accent-bright); outline-offset:-3px}
+.world{position:absolute; left:50%; top:50%; width:0; height:0; transform-style:preserve-3d;}
+.piece{position:absolute; left:0; top:0; transform-style:preserve-3d;}
+.pl{ /* a flat plane */
+  position:absolute; left:0; top:0; transform-origin:50% 50%;
+  transform-style:preserve-3d;
+}
+.pl .face, .pl .rear{position:absolute; inset:0; backface-visibility:hidden;
+  background-size:100% 100%; background-position:center; background-repeat:no-repeat;}
+/* rub stěny = pohled zvenku: světlý textil v hliníkovém SEG rámu, ne díra */
+.pl .rear{transform:rotateY(180deg);
+  background:linear-gradient(175deg,#DFE2DC 0%,#CDD1C9 55%,#BEC3BA 100%);
+  box-shadow:inset 0 0 0 4px #A9AEA4, inset 0 0 0 5px rgba(0,0,0,.14);
+}
+.blank{
+  background-color:var(--blank);
+  background-image:repeating-linear-gradient(45deg, transparent 0 14px, rgba(150,134,114,.18) 14px 15px);
+  box-shadow:inset 0 0 0 1px var(--blank-line);
+}
+.sel > .face{outline:3px solid var(--accent-bright); outline-offset:-3px}
+
+.dimtag{
+  position:absolute; left:50%; top:50%; transform:translate(-50%,-50%);
+  font-family:"IBM Plex Mono", monospace; font-size:16px; white-space:nowrap;
+  background:rgba(12,16,10,.72); color:#F7E4CE; padding:4px 9px; border-radius:4px;
+  letter-spacing:.02em;
+}
+/* zástěra podlahy PŘED stánkem – nikdy nesahá za zadní stěnu, jinak by ji CSS
+   3D řadilo před stěny a překrylo jejich spodek */
+.hallfloor{background:
+  linear-gradient(to bottom, rgba(0,0,0,.34), rgba(0,0,0,.06) 30%, rgba(0,0,0,0) 62%),
+  var(--hall-floor);
+}
+.carpet{background:linear-gradient(160deg,#3C3D3F,#292A2C)}  /* carpete grafite dle O.S. */
+
+/* stage overlays */
+.viewbtns{position:absolute; left:12px; top:12px; display:flex; flex-wrap:wrap; gap:6px; max-width:calc(100% - 24px)}
+.chip{
+  border:1px solid var(--line); background:color-mix(in srgb, var(--surface) 88%, transparent);
+  backdrop-filter:blur(6px); border-radius:999px; padding:5px 11px; font-size:12px; cursor:pointer;
+  box-shadow:var(--shadow);
+}
+.chip:hover{border-color:var(--accent)}
+.chip[aria-pressed="true"]{background:var(--accent-bright); border-color:var(--accent-bright); color:#24170A; font-weight:600}
+.zoom{position:absolute; right:12px; bottom:12px; display:flex; flex-direction:column; gap:6px}
+.zoom button{width:34px; height:34px; border-radius:8px; border:1px solid var(--line);
+  background:color-mix(in srgb, var(--surface) 88%, transparent); cursor:pointer; font-size:17px; line-height:1;
+  box-shadow:var(--shadow)}
+.hint{position:absolute; left:12px; bottom:12px; font-size:11px; color:var(--dim);
+  background:color-mix(in srgb, var(--surface) 80%, transparent); padding:4px 9px; border-radius:999px;
+  border:1px solid var(--line-soft); pointer-events:none}
+@media (max-width:520px){ .hint{display:none} }
+
+/* ---------- sidebar ---------- */
+.side{display:flex; flex-direction:column; gap:14px; padding-inline:16px; padding-block:16px 28px; min-height:0}
+.sechead{display:flex; align-items:baseline; justify-content:space-between; gap:12px}
+.sechead h2{font-size:12px; letter-spacing:.11em; text-transform:uppercase; color:var(--dim); font-weight:600; font-stretch:100%}
+.cards{display:flex; flex-direction:column; gap:10px}
+
+.card{
+  border:1px solid var(--line); background:var(--surface); border-radius:var(--r);
+  padding:11px 12px; display:grid; grid-template-columns:62px 1fr; gap:11px; align-items:start;
+  cursor:pointer; transition:border-color .12s, box-shadow .12s;
+}
+.card:hover{border-color:color-mix(in srgb, var(--accent) 55%, var(--line))}
+.card.active{border-color:var(--accent); box-shadow:0 0 0 1px var(--accent)}
+.thumb{
+  width:62px; aspect-ratio:4/3; border-radius:6px; overflow:hidden; background:var(--surface-2);
+  border:1px solid var(--line-soft); display:grid; place-items:center;
+}
+.thumb img{width:100%; height:100%; object-fit:cover; display:block}
+.thumb .ph{font-size:10px; color:var(--faint); letter-spacing:.06em}
+.cbody{min-width:0; display:flex; flex-direction:column; gap:6px}
+.crow{display:flex; align-items:baseline; gap:8px; flex-wrap:wrap}
+.cname{font-size:13.5px; font-weight:600; letter-spacing:-.005em}
+.csize{font-size:11.5px; color:var(--dim)}
+.badges{display:flex; gap:5px; flex-wrap:wrap}
+.b{font-size:10.5px; padding:2px 7px; border-radius:999px; font-weight:600; letter-spacing:.02em}
+.b.ok{background:var(--ok-bg); color:var(--ok)}
+.b.warn{background:var(--warn-bg); color:var(--warn)}
+.b.bad{background:var(--bad-bg); color:var(--bad)}
+.b.demo{background:var(--accent-soft); color:var(--accent)}
+.meta{font-size:11px; color:var(--faint); letter-spacing:.01em}
+.acts{display:flex; gap:6px; flex-wrap:wrap; margin-top:1px}
+.btn{
+  border:1px solid var(--line); background:var(--surface-2); border-radius:7px;
+  padding:5px 10px; font-size:11.5px; cursor:pointer;
+}
+.btn:hover{border-color:var(--accent); color:var(--accent)}
+.btn.primary{background:var(--accent-bright); border-color:var(--accent-bright); color:#24170A; font-weight:600}
+.btn.primary:hover{color:#24170A; filter:brightness(1.04)}
+.dims{display:flex; align-items:center; gap:5px; font-size:11px; color:var(--dim)}
+.dims input{
+  width:52px; padding:3px 5px; border:1px solid var(--line); border-radius:5px;
+  background:var(--bg); color:var(--text); font-family:"IBM Plex Mono", monospace; font-size:11px;
+}
+.dims input:focus-visible{outline:2px solid var(--accent-bright); outline-offset:0}
+select{
+  padding:4px 7px; border:1px solid var(--line); border-radius:6px; background:var(--bg);
+  color:var(--text); font:inherit; font-size:11.5px;
+}
+
+.tally{
+  border:1px solid var(--line); border-radius:var(--r); background:var(--surface-2);
+  padding:11px 12px; display:grid; grid-template-columns:repeat(3,1fr); gap:10px;
+}
+.tally div{display:flex; flex-direction:column; gap:2px}
+.tally .k{font-size:10.5px; letter-spacing:.08em; text-transform:uppercase; color:var(--faint)}
+.tally .v{font-size:17px; font-weight:600; font-family:"IBM Plex Mono", monospace}
+
+details.notes{border-top:1px solid var(--line-soft); padding-top:12px}
+details.notes summary{cursor:pointer; font-size:12px; color:var(--dim); font-weight:500}
+details.notes summary:focus-visible{outline:2px solid var(--accent-bright); outline-offset:2px}
+details.notes ul{margin:9px 0 0; padding-left:18px; display:flex; flex-direction:column; gap:6px}
+details.notes li{font-size:12px; color:var(--dim); line-height:1.5}
+details.notes b{color:var(--text); font-weight:600}
+
+.toggles{display:flex; flex-wrap:wrap; gap:6px}
+/* co patří jen k jednomu typu stánku: "u" = tři stěny, "wall" = jedna stěna */
+:root[data-layout="wall"] .u-only, :root:not([data-layout="wall"]) .wall-only{display:none !important}
+
+@media (min-width:900px){
+  html,body{height:100%}
+  .app{height:100%}
+  main{flex-direction:row-reverse}
+  .stagewrap{flex:1; height:auto; min-height:0; border-bottom:none; border-left:1px solid var(--line)}
+  .side{width:392px; flex:0 0 392px; overflow-y:auto}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none !important}}
+</style>
+
+<div class="app">
+  <header class="bar">
+    <h1 id="bTitle">Stánek FUTURECOM</h1>
+    <span class="sub" id="bSub">4,00 × 3,00 m · stěny 3,00 m + lišta 0,70 m = celkem 3,70 m</span>
+    <span class="spacer"></span>
+    <span class="ticket" id="bJira">IPTV-6427</span>
+  </header>
+  <script>
+  /* Konfiguraci stánku vkládá build.py z booths/<id>.json. Bez ní (samostatně
+     publikovaný soubor, Claude Artifact) platí FUTURECOM – musí sedět s booths/futurecom.json. */
+  window.BOOTH = window.BOOTH || {
+    id:"futurecom", title:"Stánek FUTURECOM",
+    sub:"4,00 × 3,00 m · stěny 3,00 m + lišta 0,70 m = celkem 3,70 m",
+    jira:"IPTV-6427", layout:"u",
+    panels:{back:{w:400,h:300}, left:{w:300,h:300}, right:{w:300,h:300},
+            fascia:{w:200,h:70}, counter:{w:108,h:95}, tv:{}},
+    tv:{size:55, pos:"back"}
+  };
+  document.documentElement.setAttribute("data-layout", BOOTH.layout);
+  document.title = BOOTH.title;
+  document.getElementById("bTitle").textContent = BOOTH.title;
+  document.getElementById("bSub").textContent = BOOTH.sub;
+  document.getElementById("bJira").textContent = BOOTH.jira;
+  </script>
+
+  <main>
+    <div class="stagewrap">
+      <div class="stage" id="stage" tabindex="0" role="application" aria-label="3D náhled stánku, tažením otočíte">
+        <div class="world" id="world"></div>
+      </div>
+      <div class="viewbtns">
+        <button class="chip" data-view="front">Čelní</button>
+        <button class="chip" data-view="l34">¾ zleva</button>
+        <button class="chip" data-view="r34">¾ zprava</button>
+        <button class="chip u-only" data-view="top">Půdorys</button>
+        <button class="chip" id="unfoldBtn" aria-pressed="false">Nárys</button>
+        <button class="chip u-only" id="cutBtn" aria-pressed="false">Řez</button>
+        <button class="chip" id="dimsBtn" aria-pressed="false">Rozměry</button>
+      </div>
+      <div class="hint">Táhnutím otočíte · kolečkem přiblížíte</div>
+      <div class="zoom">
+        <button id="zin" title="Přiblížit" aria-label="Přiblížit">+</button>
+        <button id="zout" title="Oddálit" aria-label="Oddálit">−</button>
+      </div>
+    </div>
+
+    <aside class="side">
+      <div class="sechead"><h2>Grafika</h2><span class="meta" id="fillinfo"></span></div>
+      <div class="cards" id="cards"></div>
+
+      <div class="sechead"><h2>Vybavení</h2></div>
+      <div class="toggles">
+        <button class="chip" id="tTv" aria-pressed="true">Televize</button>
+        <button class="chip u-only" id="tCounter" aria-pressed="true">Pult</button>
+        <button class="chip u-only" id="tFascia" aria-pressed="true">Lišta</button>
+        <select id="tvSize" aria-label="Úhlopříčka TV">
+          <option value="43">43″</option><option value="50">50″</option>
+          <option value="55" selected>55″</option><option value="65">65″</option>
+        </select>
+        <select id="tvPos" class="u-only" aria-label="Umístění TV">
+          <option value="back">TV u zadní stěny</option>
+          <option value="left">TV u levé stěny</option>
+          <option value="right">TV u pravé stěny</option>
+        </select>
+      </div>
+
+      <div class="tally">
+        <div><span class="k">Potisk</span><span class="v" id="tArea">—</span></div>
+        <div><span class="k">Panelů</span><span class="v" id="tPanels">—</span></div>
+        <div><span class="k">Hotovo</span><span class="v" id="tDone">—</span></div>
+      </div>
+
+      <details class="notes">
+        <summary>Jak se počítá kvalita a co poslat do tisku</summary>
+        <ul>
+          <li><b>Panely označené „náhled z repozitáře"</b> mají grafiku dodanou v repozitáři
+            jako zmenšený obrázek, aby se stránka rychle načetla. U nich se hlásí jen poměr
+            stran — PPI by měřilo náhled, ne tisková data. Vlastní nahraný soubor se
+            kontroluje celý.</li>
+          <li><b>PDF i bitmapa.</b> U PDF se místo PPI čte fyzický rozměr stránky: náhled
+            ukáže zjištěné měřítko (1:1, 1:10 …) a spadávku navíc oproti čistému formátu.
+            Vykresluje se první stránka.</li>
+          <li><b>PPI</b> u bitmap se počítá na finální rozměr panelu. Potřebné rozlišení plyne z pozorovací
+            vzdálenosti (1′ zorného úhlu): stěny z ~1,5 m stačí ≈ 23 PPI<span class="u-only">, lišta z ~2,5 m ≈ 14 PPI,
+            čelo pultu z ~0,6 m ≈ 57 PPI</span>.</li>
+          <li><b>Doporučený formát</b> u každého panelu odpovídá zvyklosti tiskáren — data v měřítku
+            <b>1:10 při 300 DPI</b><span class="u-only">, tedy 4 724 × 3 543 px pro stěnu 400 × 300 cm</span>.</li>
+          <li><b>Poměr stran</b> hlídá deformaci: náhled grafiku roztahuje na plný panel, stejně jako
+            tisk. Varování znamená, že se obraz zkreslí nebo bude nutné oříznout.</li>
+          <li><b>Spadávka</b> u textilu se SEG lištou obvykle 5 cm po obvodu + bezpečná zóna 8 cm
+            od hrany pro texty a loga. Potvrdit s dodavatelem stánku<span class="u-only"> podle přiloženého O.S</span>.</li>
+          <li class="u-only"><b>Výchozí rozměry</b> odpovídají technickému listu stánku: půdorys
+            4,00 × 3,00 m, stěny 3,00 m vysoké, lišta (placa MDF) 2,00 × 0,70 m, čelo pultu
+            1,08 × 0,95 m, celková výška 3,70 m, grafitový koberec. Rozměr TV stojanu je
+            odhad — přepiš ho, až bude známý.</li>
+          <li class="u-only"><b>Řez</b> odkryje stěnu, za kterou stojí kamera, aby šlo nahlédnout dovnitř.
+            Vypnutý (výchozí) = stánek je plný, jak ho uvidí návštěvník.</li>
+          <li class="wall-only"><b>Výchozí rozměry</b> odpovídají podkladu grafiky (viz záhlaví).
+            Televize visí na stěně uprostřed volného pole v grafice; úhlopříčka se dá přepnout
+            a pozice se drží i při změně rozměru stěny.</li>
+        </ul>
+      </details>
+    </aside>
+  </main>
+</div>
+
+<input type="file" id="picker" accept="image/*,application/pdf,.pdf" hidden>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
+<script>
+(function(){
+"use strict";
+
+/* ============ model ============ */
+var EYE = 150;               // výška očí v cm
+var B = window.BOOTH, WALL = B.layout === "wall";
+var CATALOG = [
+  {id:"back",    name:"Zadní stěna",       w:400, h:300, dist:150, kind:"wall",  art:"stats"},
+  {id:"left",    name:"Levá stěna",        w:300, h:300, dist:150, kind:"wall",  art:"hero"},
+  {id:"right",   name:"Pravá stěna",       w:300, h:300, dist:150, kind:"wall",  art:"grid"},
+  {id:"fascia",  name:"Placa MDF (lišta)",  w:200, h:70,  dist:250, kind:"trim",  art:"strip"},
+  {id:"counter", name:"Čelo pultu (balcão)",w:108, h:95,  dist:60,  kind:"trim",  art:"mark"},
+  {id:"tv",      name:"TV – obrazovka",    w:122, h:69,  dist:150, kind:"screen",art:"ui"}
+];
+/* panely tohohle stánku, v pořadí katalogu, s rozměry z konfigurace */
+var DEFAULTS = CATALOG.filter(function(d){ return B.panels[d.id]; }).map(function(d){
+  return Object.assign({}, d, B.panels[d.id]);
+});
+var TVS = {43:[95.2,53.6], 50:[110.7,62.3], 55:[121.8,68.5], 65:[143.9,81.0]};
+
+var P = {};                  // id -> panel state (i panely, které stánek nemá – scéna s nimi počítá)
+CATALOG.concat(DEFAULTS).forEach(function(d){
+  P[d.id] = Object.assign({}, d, {src:null, px:null, pdf:null, demo:false, local:false, asset:false, loading:false});
+});
+
+var ui = {tv:true, counter:true, fascia:true, dims:false, unfold:false, cut:false, tvSize:B.tv.size, tvPos:B.tv.pos || "back", sel:null};
+var PERSP = 2600;
+var cam = {rx:7, ry:-14, zoom:0};
+
+/* ============ storage (best effort) ============ */
+/* všechny stánky sdílí origin github.io – klíče musí nést id stánku */
+var KEY = "stanek-" + B.id, CFG_KEY = KEY + "-cfg", SEEDED_KEY = KEY + "-seeded";
+var DB = null;
+function openDB(){
+  return new Promise(function(res){
+    try{
+      var r = indexedDB.open(KEY, 1);
+      r.onupgradeneeded = function(){ r.result.createObjectStore("img"); };
+      r.onsuccess = function(){ res(r.result); };
+      r.onerror = function(){ res(null); };
+    }catch(e){ res(null); }
+  });
+}
+function dbPut(k,v){ try{ if(!DB) return; DB.transaction("img","readwrite").objectStore("img").put(v,k); }catch(e){} }
+function dbDel(k){ try{ if(!DB) return; DB.transaction("img","readwrite").objectStore("img").delete(k); }catch(e){} }
+function dbGet(k){
+  return new Promise(function(res){
+    try{ var q = DB.transaction("img","readonly").objectStore("img").get(k);
+      q.onsuccess=function(){res(q.result||null)}; q.onerror=function(){res(null)};
+    }catch(e){ res(null); }
+  });
+}
+function saveUI(){
+  try{
+    var d = {};
+    Object.keys(P).forEach(function(k){ d[k] = {w:P[k].w, h:P[k].h}; });
+    localStorage.setItem(CFG_KEY, JSON.stringify({dims:d, ui:{
+      tv:ui.tv, counter:ui.counter, fascia:ui.fascia, cut:ui.cut, tvSize:ui.tvSize, tvPos:ui.tvPos}}));
+  }catch(e){}
+}
+function loadUI(){
+  try{
+    var raw = localStorage.getItem(CFG_KEY); if(!raw) return;
+    var o = JSON.parse(raw);
+    if(o.dims) Object.keys(o.dims).forEach(function(k){
+      if(P[k]){ P[k].w = o.dims[k].w; P[k].h = o.dims[k].h; } });
+    if(o.ui) Object.assign(ui, o.ui);
+  }catch(e){}
+}
+
+/* ============ ukázková grafika ============ */
+function sampleArt(w, h, kind){
+  var s = Math.min(1200/Math.max(w,h), 6);
+  var c = document.createElement("canvas");
+  c.width = Math.max(64, Math.round(w*s)); c.height = Math.max(32, Math.round(h*s));
+  var x = c.getContext("2d"), W = c.width, H = c.height, m = Math.min(W,H);
+
+  var g = x.createLinearGradient(0,0,W,H);
+  g.addColorStop(0,"#080D14"); g.addColorStop(.55,"#101C2A"); g.addColorStop(1,"#0A1420");
+  x.fillStyle = g; x.fillRect(0,0,W,H);
+
+  x.strokeStyle = "rgba(122,160,190,.10)"; x.lineWidth = Math.max(1, m*.003);
+  for(var i=0;i<=16;i++){ var px = W*i/16; x.beginPath(); x.moveTo(px,0); x.lineTo(px-W*.12,H); x.stroke(); }
+
+  x.save(); x.translate(W*.5,H*.5); x.rotate(-.35);
+  var gg = x.createLinearGradient(-W,0,W,0);
+  gg.addColorStop(0,"rgba(228,136,60,0)"); gg.addColorStop(.5,"rgba(228,136,60,.55)"); gg.addColorStop(1,"rgba(228,136,60,0)");
+  x.fillStyle = gg; x.fillRect(-W, m*(kind==="strip"? .05 : .22), W*2, m*.035); x.restore();
+
+  function word(cx, cy, size){
+    x.textAlign="center"; x.textBaseline="middle";
+    x.font = "700 " + size + 'px Archivo, "Helvetica Neue", system-ui, sans-serif';
+    var a = "MODERN ", b = "TV";
+    var wa = x.measureText(a).width, wb = x.measureText(b).width, tot = wa+wb;
+    x.fillStyle = "#F2F6EC"; x.textAlign="left"; x.fillText(a, cx-tot/2, cy);
+    x.fillStyle = "#E4883C"; x.fillText(b, cx-tot/2+wa, cy);
+  }
+  function chip(cx, cy, r, pct, label){
+    x.lineWidth = r*.22;
+    x.strokeStyle = "rgba(255,255,255,.14)"; x.beginPath(); x.arc(cx,cy,r,0,Math.PI*2); x.stroke();
+    x.strokeStyle = "#E4883C"; x.beginPath();
+    x.arc(cx,cy,r,-Math.PI/2,-Math.PI/2+Math.PI*2*pct); x.stroke();
+    x.fillStyle="#F2F6EC"; x.textAlign="center"; x.textBaseline="middle";
+    x.font = "600 " + (r*.62) + 'px "IBM Plex Mono", monospace';
+    x.fillText(Math.round(pct*100)+"%", cx, cy+r*.02);
+    x.fillStyle="rgba(240,232,222,.55)"; x.font = "500 " + (r*.30) + 'px "IBM Plex Sans", sans-serif';
+    x.fillText(label, cx, cy+r*1.42);
+  }
+  function bars(cx, cy, bw, bh){
+    var v=[.85,.62,.94,.48,.71], n=v.length, gap=bw*.06, sw=(bw-gap*(n-1))/n;
+    for(var i=0;i<n;i++){
+      var hgt = bh*v[i], bx = cx-bw/2+i*(sw+gap);
+      x.fillStyle = i===2 ? "#E4883C" : "rgba(180,205,225,.32)";
+      x.fillRect(bx, cy+bh/2-hgt, sw, hgt);
+    }
+  }
+
+  if(kind==="stats"){
+    word(W*.5, H*.30, m*.115);
+    x.fillStyle="rgba(240,232,222,.62)"; x.textAlign="center";
+    x.font = "500 " + (m*.038) + 'px "IBM Plex Sans", sans-serif';
+    x.fillText("SPORTOVNÍ STATISTIKY V ŽIVÉM VYSÍLÁNÍ", W*.5, H*.30+m*.10);
+    chip(W*.27, H*.66, m*.10, .78, "Sledovanost");
+    chip(W*.50, H*.66, m*.10, .93, "Uptime");
+    bars(W*.75, H*.66, m*.28, m*.20);
+  } else if(kind==="hero"){
+    word(W*.5, H*.42, m*.13);
+    x.fillStyle="#E4883C"; x.textAlign="center";
+    x.font = "500 " + (m*.042) + 'px "IBM Plex Sans", sans-serif';
+    x.fillText("IPTV · OTT · CLOUD DVR", W*.5, H*.42+m*.12);
+    chip(W*.5, H*.74, m*.09, .64, "Engagement");
+  } else if(kind==="grid"){
+    var cols=4, rows=3, pad=m*.06, cw=(W-pad*(cols+1))/cols, ch=(H-pad*(rows+1))/rows;
+    for(var r2=0;r2<rows;r2++) for(var c2=0;c2<cols;c2++){
+      x.fillStyle = (r2*cols+c2)%5===0 ? "rgba(228,136,60,.20)" : "rgba(160,190,215,.09)";
+      x.fillRect(pad+c2*(cw+pad), pad+r2*(ch+pad), cw, ch);
+    }
+    word(W*.5, H*.5, m*.11);
+  } else if(kind==="strip"){
+    word(W*.5, H*.5, H*.44);
+  } else if(kind==="mark"){
+    word(W*.5, H*.5, m*.19);
+  } else { /* ui */
+    x.fillStyle="#060A0F"; x.fillRect(0,0,W,H);
+    x.fillStyle="rgba(255,255,255,.05)"; x.fillRect(0,0,W,H*.13);
+    word(W*.14, H*.065, H*.075);
+    var tw=(W-m*.14)/4;
+    for(var k=0;k<4;k++){
+      x.fillStyle="rgba(150,180,205,.13)";
+      x.fillRect(m*.035+k*tw, H*.22, tw-m*.035, H*.36);
+      x.fillStyle="rgba(228,136,60,.5)";
+      x.fillRect(m*.035+k*tw, H*.22, tw-m*.035, H*.012);
+    }
+    x.fillStyle="rgba(150,180,205,.10)"; x.fillRect(m*.035, H*.66, W-m*.07, H*.26);
+    x.fillStyle="#E4883C"; x.fillRect(m*.035, H*.66, W*.22, H*.012);
+  }
+  return c.toDataURL("image/jpeg", .86);
+}
+
+function seedSamples(){
+  DEFAULTS.forEach(function(d){
+    var p = P[d.id];
+    if(p.src) return;
+    p.src = sampleArt(p.w, p.h, d.art);
+    p.demo = true; p.px = null;
+  });
+}
+
+/* ============ 3D scéna ============ */
+var world = document.getElementById("world");
+var stage = document.getElementById("stage");
+
+function plane(cls){
+  var el = document.createElement("div");
+  el.className = "pl " + (cls||"");
+  el.innerHTML = '<div class="face"></div><div class="rear"></div>';
+  world.appendChild(el);
+  return el;
+}
+var G = {
+  hall:   plane("hallfloor"),
+  carpet: plane("carpet"),
+  back:   plane(), left: plane(), right: plane(),
+  fascia: plane(), fasL: plane(), fasR: plane(),
+  cFront: plane(), cTop: plane(), cSideL: plane(), cSideR: plane(),
+  tvFrame:plane(), tvPole: plane(), tvBase: plane()
+};
+Object.keys(G).forEach(function(k){
+  var t = document.createElement("div"); t.className="dimtag"; t.hidden = true;
+  G[k].appendChild(t); G[k]._tag = t;
+});
+
+function put(el, w, h, x, yTop, z, ry, rx){
+  el.style.width = w+"px"; el.style.height = h+"px";
+  el.style.marginLeft = (-w/2)+"px"; el.style.marginTop = (-h/2)+"px";
+  el.style.transform = "translate3d("+x+"px,"+yTop+"px,"+z+"px)"
+    + (ry ? " rotateY("+ry+"deg)" : "") + (rx ? " rotateX("+rx+"deg)" : "");
+}
+function paint(el, p){
+  var f = el.querySelector(".face");
+  if(p && p.src){
+    f.style.backgroundImage = "url('"+p.src+"')";
+    /* vynutit inline: zkratka `background` jinde by shodila size/position na auto
+       a z grafiky by byl vidět jen levý horní výřez */
+    f.style.backgroundSize = "100% 100%";
+    f.style.backgroundPosition = "center";
+    f.style.backgroundRepeat = "no-repeat";
+    f.classList.remove("blank");
+  } else {
+    f.style.backgroundImage = "none"; f.classList.add("blank");
+  }
+}
+function tag(el, text){
+  el._tag.textContent = text;
+  el._tag.hidden = !ui.dims;
+}
+
+function render3d(){
+  var W = P.back.w, H = P.back.h, D = WALL ? 0 : P.left.w;
+  var hL = P.left.h, hR = P.right.h;
+
+  var fw = P.fascia.w, fh = P.fascia.h;
+  var cw = P.counter.w, chh = P.counter.h, cd = 50;
+  var only3d = [G.hall, G.carpet, G.cTop, G.cSideL, G.cSideR, G.tvFrame, G.tvPole, G.tvBase, G.fasL, G.fasR];
+
+  paint(G.back, P.back);     tag(G.back,   P.back.w+" × "+P.back.h+" cm");
+  paint(G.left, P.left);     tag(G.left,   P.left.w+" × "+P.left.h+" cm");
+  paint(G.right, P.right);   tag(G.right,  P.right.w+" × "+P.right.h+" cm");
+  paint(G.fascia, P.fascia); tag(G.fascia, fw+" × "+fh+" cm");
+  paint(G.cFront, P.counter);tag(G.cFront, cw+" × "+chh+" cm");
+
+  /* samostatná stěna: bez bočnic, lišty a pultu */
+  [G.left, G.right].forEach(function(e){ e.hidden = WALL; });
+
+  if(ui.unfold){
+    /* rozložené stěny: všechno čelně vedle sebe, bez podlahy a vybavení */
+    only3d.forEach(function(e){ e.hidden = true; });
+    var gap = 26, off = W/2 + D/2 + gap;
+    put(G.back,  W,  H,  0,    EYE-H/2,  0, 0, 0);
+    put(G.left,  D,  hL, -off, EYE-hL/2, 0, 0, 0);
+    put(G.right, D,  hR, off,  EYE-hR/2, 0, 0, 0);
+    G.fascia.hidden = WALL;
+    G.fasL.hidden = true; G.fasR.hidden = true;
+    put(G.fascia, fw, fh, 0, EYE-(H+gap+fh/2), 0, 0, 0);
+    G.cFront.hidden = WALL;
+    put(G.cFront, cw, chh, 0, EYE+gap+chh/2, 0, 0, 0);
+    G.left.querySelector(".face").style.filter = "none";
+    G.right.querySelector(".face").style.filter = "none";
+  } else {
+    only3d.forEach(function(e){ e.hidden = false; });
+    put(G.hall, W+700, 520, 0, EYE, D/2+260, 0, 90);
+    put(G.carpet, W, D, 0, EYE-1, 0, 0, 90);
+    G.carpet.hidden = WALL;
+
+    put(G.back, W, H, 0, EYE-H/2, -D/2, 0, 0);
+    put(G.left, D, hL, -W/2, EYE-hL/2, 0, 90, 0);
+    put(G.right, D, hR, W/2, EYE-hR/2, 0, -90, 0);
+
+    /* boční stěny mírně ztmavit – filtr patří na .face, na .pl by zploštil 3D kontext */
+    G.left.querySelector(".face").style.filter = "brightness(.86)";
+    G.right.querySelector(".face").style.filter = "brightness(.74)";
+
+    /* placa MDF 2,00 × 0,70 m je užší než čelo stánku – po stranách jsou hladké
+       bílé panely, stejně jako na vizualizaci od Apollo */
+    var showFascia = ui.fascia && !WALL;
+    G.fascia.hidden = !showFascia;
+    var fy = EYE-(H+fh/2), side = Math.max(0, (W-fw)/2);
+    put(G.fascia, fw, fh, 0, fy, D/2, 0, 0);
+    [G.fasL, G.fasR].forEach(function(e){ e.hidden = !showFascia || side < 2; });
+    if(side >= 2){
+      put(G.fasL, side, fh, -(fw/2+side/2), fy, D/2, 0, 0);
+      put(G.fasR, side, fh,  (fw/2+side/2), fy, D/2, 0, 0);
+      [G.fasL,G.fasR].forEach(function(e){
+        e.querySelector(".face").style.background = "linear-gradient(180deg,#FBFBFA,#E8E9E6)";
+      });
+    }
+
+    // pult
+    var cx = -(W/2-90), cz = D/2-120;
+    [G.cFront,G.cTop,G.cSideL,G.cSideR].forEach(function(e){ e.hidden = !ui.counter || WALL; });
+    put(G.cFront, cw, chh, cx, EYE-chh/2, cz+cd/2, 0, 0);
+    put(G.cTop, cw, cd, cx, EYE-chh, cz, 0, 90);
+    G.cTop.querySelector(".face").style.background = "#E8EAE4";
+    put(G.cSideL, cd, chh, cx-cw/2, EYE-chh/2, cz, -90, 0);
+    put(G.cSideR, cd, chh, cx+cw/2, EYE-chh/2, cz, 90, 0);
+    [G.cSideL,G.cSideR].forEach(function(e){ e.querySelector(".face").style.background = "#CBD0C6"; });
+
+    // televize
+    var tw = P.tv.w, th = P.tv.h, bez = WALL ? 1 : 3, ctr = 140;
+    [G.tvFrame,G.tvPole,G.tvBase].forEach(function(e){ e.hidden = !ui.tv; });
+    var tx, tz, tr;
+    if(WALL){
+      /* TV visí na stěně uprostřed; střed v B.tv.centerFromTop cm od horní hrany
+         původní stěny – grafika se roztahuje s panelem, takže se přepočítá poměrem */
+      tx = 0; tz = -D/2+4; tr = 0;
+      ctr = H - B.tv.centerFromTop * H / B.panels.back.h;
+      G.tvPole.hidden = true; G.tvBase.hidden = true;
+    }
+    else if(ui.tvPos === "back"){ tx = W/2-tw/2-50; tz = -D/2+16; tr = 0; }
+    else if(ui.tvPos === "left"){ tx = -W/2+16; tz = D/2-tw/2-40; tr = 90; }
+    else { tx = W/2-16; tz = D/2-tw/2-40; tr = -90; }
+    put(G.tvFrame, tw+bez*2, th+bez*2, tx, EYE-ctr, tz, tr, 0);
+    var ff = G.tvFrame.querySelector(".face");
+    ff.style.border = bez+"px solid #101214"; ff.style.backgroundColor = "#05080B";
+    paint(G.tvFrame, P.tv); tag(G.tvFrame, ui.tvSize+"″ · "+tw.toFixed(0)+" × "+th.toFixed(0)+" cm");
+    put(G.tvPole, 14, ctr-th/2, tx, EYE-(ctr-th/2)/2, tz, tr, 0);
+    G.tvPole.querySelector(".face").style.background = "#1C2024";
+    put(G.tvBase, 60, 44, tx, EYE-2, tz, tr, 90);
+    G.tvBase.querySelector(".face").style.background = "radial-gradient(60% 60% at 50% 50%, #22262A, #14181B)";
+  }
+
+  // výběr
+  Object.keys(G).forEach(function(k){ G[k].classList.remove("sel"); });
+  var map = {back:G.back, left:G.left, right:G.right, fascia:G.fascia, counter:G.cFront, tv:G.tvFrame};
+  if(ui.sel && map[ui.sel]) map[ui.sel].classList.add("sel");
+}
+
+/* kamera se vždy dopočítá tak, aby se stánek vešel do plochy náhledu;
+   cam.zoom je jen uživatelská odchylka od tohoto výchozího odstupu */
+function fitBase(){
+  var W = P.back.w, D = WALL ? 0 : P.left.w, H = P.back.h;
+  var r = cam.ry * Math.PI/180, rx = cam.rx * Math.PI/180;
+  var effW, effH;
+  if(ui.unfold){
+    effW = W + 2*D + 90;
+    effH = WALL ? H + 70 : H + P.fascia.h + P.counter.h + 70;
+  } else {
+    effW = Math.abs(W*Math.cos(r)) + Math.abs(D*Math.sin(r));
+    /* placa MDF stojí nad stěnami – do výšky se musí započítat, jinak se ořízne */
+    var top = H + (ui.fascia && !WALL ? P.fascia.h : 0);
+    effH = top*Math.cos(rx) + D*Math.abs(Math.sin(rx)) + 40;
+  }
+  var box = stage.getBoundingClientRect();
+  /* nahoře je lišta s tlačítky – nechat jí místo */
+  var sw = Math.max(260, box.width), sh = Math.max(220, box.height - 46);
+  var s = Math.min(sw*0.88/effW, sh*0.92/effH);
+  s = Math.max(0.2, Math.min(s, 2.5));
+  return PERSP * (1 - 1/s);
+}
+/* Stěna, za kterou se kamera dostane, se celá vypne (řez), nikoli zprůhlední –
+   průsvitná stěna vypadá jako sklo a přes ni prosvítá interiér. */
+function setShown(el, on){
+  el.querySelector(".face").style.visibility = on ? "visible" : "hidden";
+  el.querySelector(".rear").style.visibility = on ? "visible" : "hidden";
+  el._tag.style.visibility = on ? "visible" : "hidden";
+}
+function occlude(){
+  var t = 6, cut = ui.cut && !ui.unfold;
+  setShown(G.right, !cut || cam.ry >= -t);
+  setShown(G.left,  !cut || cam.ry <=  t);
+}
+function renderCam(){
+  var dolly = fitBase() + cam.zoom;
+  /* samostatnou stěnu vycentrovat na její střed, ne na výšku očí */
+  var lift = WALL ? P.back.h/2 - EYE : 0;
+  /* záporné rotateX = pohled shora: kladné by scénu překlopilo a podlaha by se
+     dostala před stěny */
+  world.style.transform = "translateZ("+dolly.toFixed(1)+"px)" + (lift ? " translateY("+lift+"px)" : "") + " rotateX("+(-cam.rx)+"deg) rotateY("+cam.ry+"deg)";
+  occlude();
+}
+if(window.ResizeObserver){ new ResizeObserver(renderCam).observe(stage); }
+else window.addEventListener("resize", renderCam);
+
+/* ============ kontrola dat ============ */
+function reqPPI(dist){ return Math.max(12, Math.round(3438/dist)); }
+function recPx(p){ // 1:10 @ 300 DPI
+  return [Math.round(p.w/10/2.54*300), Math.round(p.h/10/2.54*300)];
+}
+/* u tiskového PDF nedává PPI smysl – rozhoduje fyzický rozměr stránky,
+   tedy měřítko vůči panelu a spadávka navíc */
+var SCALES = [[1,"1:1"],[0.5,"1:2"],[0.2,"1:5"],[0.1,"1:10"],[0.05,"1:20"]];
+function pdfCheck(p){
+  var r = p.pdf.wcm / p.w, best = null;
+  SCALES.forEach(function(s){
+    var d = Math.abs(r - s[0]) / s[0];
+    if(d < 0.14 && (!best || d < best.d)) best = {s:s[0], label:s[1], d:d};
+  });
+  var bleed = best ? (p.pdf.wcm/best.s - p.w)/2 : 0;
+  var bleedV = best ? (p.pdf.hcm/best.s - p.h)/2 : 0;
+  var arP = p.pdf.wcm/p.pdf.hcm, tgt = p.w/p.h;
+  var dev = Math.abs(arP - tgt)/tgt;
+  return {
+    pdf:true, scale:best,
+    bleed: (best && bleed > 0.4 && Math.abs(bleed-bleedV) < 1.2) ? bleed : 0,
+    dev: Math.round(dev*100),
+    arState: dev <= .015 ? "ok" : (dev <= .07 ? "warn" : "bad")
+  };
+}
+function check(p){
+  if(p.pdf) return pdfCheck(p);
+  if(!p.px) return null;
+  var ppi = p.px[0] / (p.w/2.54);
+  var need = reqPPI(p.dist);
+  var ppiState = ppi >= need ? "ok" : (ppi >= need*0.7 ? "warn" : "bad");
+  var ar = p.px[0]/p.px[1], target = p.w/p.h;
+  var dev = Math.abs(ar-target)/target;
+  var arState = dev <= .01 ? "ok" : (dev <= .06 ? "warn" : "bad");
+  return {ppi:Math.round(ppi), need:need, ppiState:ppiState, arState:arState, dev:Math.round(dev*100)};
+}
+
+/* ============ sidebar ============ */
+var cardsEl = document.getElementById("cards");
+var picker = document.getElementById("picker");
+var pickTarget = null;
+
+function fmt(n){ return n.toLocaleString("cs-CZ"); }
+
+function renderCards(){
+  cardsEl.textContent = "";
+  DEFAULTS.forEach(function(d){
+    var p = P[d.id];
+    var card = document.createElement("div");
+    card.className = "card" + (ui.sel===p.id ? " active" : "");
+    card.tabIndex = 0;
+
+    var th = document.createElement("div"); th.className = "thumb";
+    if(p.src){ var im = document.createElement("img"); im.src = p.src; im.alt = ""; th.appendChild(im); }
+    else {
+      var ph = document.createElement("span"); ph.className="ph";
+      ph.textContent = p.loading ? "…" : "prázdné";
+      th.appendChild(ph);
+    }
+    card.appendChild(th);
+
+    var b = document.createElement("div"); b.className = "cbody";
+
+    var r1 = document.createElement("div"); r1.className = "crow";
+    var nm = document.createElement("span"); nm.className="cname"; nm.textContent = p.name;
+    var sz = document.createElement("span"); sz.className="csize mono";
+    sz.textContent = p.w + " × " + p.h + " cm";
+    r1.appendChild(nm); r1.appendChild(sz); b.appendChild(r1);
+
+    var bd = document.createElement("div"); bd.className = "badges";
+    var c = check(p);
+    if(p.loading){ bd.appendChild(badge("demo","načítá se…")); }
+    else if(p.demo){ bd.appendChild(badge("demo","ukázka")); }
+    else if(p.asset && !p.pdf){
+      /* rastrový náhled z repozitáře: PPI by měřilo náhled, ne tisková data,
+         takže se hlásí jen poměr stran, který smysl má */
+      bd.appendChild(badge("demo","náhled z repozitáře"));
+      if(c) bd.appendChild(badge(c.arState, c.arState==="ok" ? "poměr" : "poměr −" + c.dev + " %"));
+    }
+    else {
+      /* odkud grafika je, a k tomu vždycky i kontrola kvality */
+      if(p.asset) bd.appendChild(badge("demo","z repozitáře"));
+      if(c && c.pdf){
+        bd.appendChild(badge("demo","PDF"));
+        bd.appendChild(c.scale ? badge("ok", c.scale.label) : badge("bad","měřítko nesedí"));
+        bd.appendChild(badge(c.arState, c.arState==="ok" ? "poměr" : "poměr −" + c.dev + " %"));
+      } else if(c){
+        bd.appendChild(badge(c.ppiState, c.ppi + " PPI"));
+        bd.appendChild(badge(c.arState, c.arState==="ok" ? "poměr" : "poměr −" + c.dev + " %"));
+      }
+    }
+    if(bd.children.length) b.appendChild(bd);
+
+    var mt = document.createElement("div"); mt.className = "meta mono";
+    if(p.loading){
+      mt.textContent = "stahuji grafiku z repozitáře…";
+    }
+    else if(p.asset && p.px){
+      mt.textContent = "náhled " + fmt(p.px[0]) + " × " + fmt(p.px[1]) + " px"
+        + " · rozlišení pro tisk kontroluj na originálu";
+    }
+    else if(p.pdf){
+      var cm1 = function(v){ return v.toFixed(v < 100 ? 1 : 0).replace(".",","); };
+      mt.textContent = "PDF " + cm1(p.pdf.wcm) + " × " + cm1(p.pdf.hcm) + " cm"
+        + (c.scale ? "" : " · měřítko neurčeno")
+        + (c.bleed ? " · spadávka " + cm1(c.bleed) + " cm" : "")
+        + (p.pdf.pages > 1 ? " · " + p.pdf.pages + " str., náhled 1." : "");
+    }
+    else if(p.px && !p.demo){
+      mt.textContent = fmt(p.px[0]) + " × " + fmt(p.px[1]) + " px · min. " + reqPPI(p.dist) + " PPI @ " + (p.dist/100).toFixed(1).replace(".",",") + " m";
+    } else {
+      var r = recPx(p);
+      mt.textContent = "doporučeno " + fmt(r[0]) + " × " + fmt(r[1]) + " px (1:10 @ 300 DPI)";
+    }
+    b.appendChild(mt);
+
+    var acts = document.createElement("div"); acts.className = "acts";
+    var up = document.createElement("button");
+    up.className = "btn" + (p.src ? "" : " primary");
+    up.textContent = p.src ? "Nahradit" : "Nahrát grafiku";
+    up.addEventListener("click", function(ev){ ev.stopPropagation(); pickTarget = p.id; picker.value=""; picker.click(); });
+    acts.appendChild(up);
+    if(p.local){
+      var rm = document.createElement("button"); rm.className="btn"; rm.textContent="Odebrat";
+      rm.addEventListener("click", function(ev){
+        ev.stopPropagation();
+        dbDel(p.id);
+        p.local = false; p.asset = false; p.src = null; p.px = null; p.pdf = null; p.demo = false;
+        try{ localStorage.setItem(SEEDED_KEY,"1"); }catch(e){}
+        refresh();
+        restoreDefault(p).then(refresh);
+      });
+      acts.appendChild(rm);
+    }
+    if(d.kind !== "screen"){
+      var dm = document.createElement("div"); dm.className = "dims";
+      dm.appendChild(num(p, "w")); dm.appendChild(txt("×")); dm.appendChild(num(p, "h")); dm.appendChild(txt("cm"));
+      acts.appendChild(dm);
+    }
+    b.appendChild(acts);
+
+    card.appendChild(b);
+    card.addEventListener("click", function(){ focusPanel(p.id); });
+    card.addEventListener("keydown", function(e){ if(e.key==="Enter"||e.key===" "){ e.preventDefault(); focusPanel(p.id); } });
+    cardsEl.appendChild(card);
+  });
+
+  var filled = DEFAULTS.filter(function(d){ return P[d.id].src; }).length;
+  var loading = DEFAULTS.filter(function(d){ return P[d.id].loading; }).length;
+  document.getElementById("fillinfo").textContent = loading
+    ? "načítám " + loading + " z repozitáře…"
+    : filled + " z " + DEFAULTS.length + " osazeno";
+  var area = DEFAULTS.reduce(function(s,d){
+    var p = P[d.id];
+    return s + (d.kind==="screen" ? 0 : p.w*p.h/10000);
+  }, 0);
+  document.getElementById("tArea").textContent = area.toFixed(1).replace(".",",") + " m²";
+  document.getElementById("tPanels").textContent = DEFAULTS.length - 1;
+  document.getElementById("tDone").textContent = filled + "/" + DEFAULTS.length;
+}
+function badge(kind, text){ var s=document.createElement("span"); s.className="b "+kind; s.textContent=text; return s; }
+function txt(t){ var s=document.createElement("span"); s.textContent=t; return s; }
+function num(p, key){
+  var i = document.createElement("input");
+  i.type="number"; i.min="10"; i.max="1200"; i.step="1"; i.value=p[key];
+  i.id = "dim-"+p.id+"-"+key;
+  i.setAttribute("aria-label", p.name + (key==="w"?" šířka":" výška") + " v cm");
+  i.addEventListener("click", function(e){ e.stopPropagation(); });
+  i.addEventListener("change", function(){
+    var v = parseInt(i.value,10);
+    if(isNaN(v) || v < 10) { i.value = p[key]; return; }
+    p[key] = Math.min(1200, v);
+    if(p.demo){ p.src = sampleArt(p.w, p.h, p.art); }
+    saveUI(); refresh();
+  });
+  return i;
+}
+
+function focusPanel(id){
+  ui.sel = (ui.sel === id) ? null : id;
+  if(ui.sel && !ui.unfold){
+    /* kamera musí stát na PROTĚJŠÍ straně, než je stěna – jinak by se stěna
+       vyhodnotila jako zaclánějící a prosvětlila se */
+    var v = {back:[5,0], left:[5,-36], right:[5,36], fascia:[-9,0], counter:[16,-26], tv:[7,16]}[id];
+    if(v){ cam.rx = v[0]; cam.ry = v[1]; cam.zoom = (id==="counter"||id==="tv") ? 700 : 0; renderCam(); }
+  }
+  refresh();
+}
+
+function loadImage(file, p){
+  return new Promise(function(res, rej){
+    var rd = new FileReader();
+    rd.onerror = function(){ rej(new Error("Soubor se nepodařilo přečíst.")); };
+    rd.onload = function(){
+      var im = new Image();
+      im.onload = function(){
+        p.src = rd.result; p.px = [im.naturalWidth, im.naturalHeight];
+        p.pdf = null; p.demo = false; res();
+      };
+      im.onerror = function(){ rej(new Error("Tohle není obrázek, který prohlížeč umí zobrazit. Zkus JPG, PNG nebo PDF.")); };
+      im.src = rd.result;
+    };
+    rd.readAsDataURL(file);
+  });
+}
+
+/* PDF se vykreslí přes pdf.js do canvasu; z první stránky se zároveň vyčte
+   fyzický rozměr v bodech (1 pt = 1/72"), podle kterého se pozná měřítko */
+function loadPdf(file, p){
+  if(!window.pdfjsLib) return Promise.reject(new Error("Knihovna pro PDF se nenačetla (nejspíš chybí připojení). Zkus JPG nebo PNG."));
+  return file.arrayBuffer().then(function(buf){
+    return pdfjsLib.getDocument({data:new Uint8Array(buf)}).promise;
+  }).then(function(doc){
+    return doc.getPage(1).then(function(page){
+      var base = page.getViewport({scale:1});
+      var wcm = base.width/72*2.54, hcm = base.height/72*2.54;
+      var k = Math.min(4, Math.max(0.25, 1800/Math.max(base.width, base.height)));
+      var vp = page.getViewport({scale:k});
+      var cv = document.createElement("canvas");
+      cv.width = Math.round(vp.width); cv.height = Math.round(vp.height);
+      var cx = cv.getContext("2d");
+      cx.fillStyle = "#fff"; cx.fillRect(0,0,cv.width,cv.height);
+      return page.render({canvasContext:cx, viewport:vp}).promise.then(function(){
+        p.src = cv.toDataURL("image/jpeg", .9);
+        p.px = [cv.width, cv.height];
+        p.pdf = {wcm:wcm, hcm:hcm, pages:doc.numPages, name:file.name};
+        p.demo = false;
+      });
+    });
+  }).catch(function(e){
+    throw new Error("PDF se nepodařilo otevřít" + (e && e.name === "PasswordException" ? " – je zamčené heslem." : "."));
+  });
+}
+
+/* ===== grafika dodaná v repozitáři =====
+   assets/panels.json mapuje id panelu na soubor; kdokoli otevře odkaz, uvidí ji.
+   Vlastní nahraná grafika (IndexedDB) má vždy přednost. */
+var MANIFEST = null;
+
+function loadImageUrl(url, p){
+  return new Promise(function(res, rej){
+    var im = new Image();
+    im.onload = function(){
+      p.src = url; p.px = [im.naturalWidth, im.naturalHeight];
+      p.pdf = null; p.demo = false; p.asset = true; res();
+    };
+    im.onerror = function(){ rej(new Error(url)); };
+    im.src = url;
+  });
+}
+function loadPdfUrl(url, p){
+  return fetch(url).then(function(r){
+    if(!r.ok) throw new Error(url);
+    return r.blob();
+  }).then(function(b){
+    return loadPdf(new File([b], url.split("/").pop(), {type:"application/pdf"}), p);
+  }).then(function(){ p.asset = true; });
+}
+function loadOneAsset(id){
+  var url = MANIFEST && MANIFEST[id];
+  if(!url || !B.panels[id]) return Promise.resolve(false);
+  var job = /\.pdf(\?|$)/i.test(url) ? loadPdfUrl(url, P[id]) : loadImageUrl(url, P[id]);
+  return job.then(function(){ return true; }, function(){ return false; });
+}
+function loadAssets(){
+  return fetch("assets/panels.json", {cache:"no-cache"}).then(function(r){
+    if(!r.ok) throw new Error("bez manifestu");
+    return r.json();
+  }).then(function(man){
+    MANIFEST = man;
+    var todo = Object.keys(man).filter(function(id){ return B.panels[id] && !P[id].local; });
+    /* tisková PDF se stahují i pár sekund – ukázku rovnou pryč, ať nepřeskočí */
+    todo.forEach(function(id){
+      var p = P[id];
+      p.loading = true;
+      if(p.demo){ p.src = null; p.px = null; p.demo = false; }
+    });
+    refresh();
+    return Promise.all(todo.map(function(id){
+      return loadOneAsset(id).then(function(){ P[id].loading = false; refresh(); });
+    }));
+  }).catch(function(){ /* soubor:// nebo prázdné assets – zůstanou ukázky */ });
+}
+
+/* po smazání vlastní grafiky se vrátí ta z repozitáře, jinak ukázka */
+function restoreDefault(p){
+  return loadOneAsset(p.id).then(function(ok){
+    if(ok) return;
+    var cleared = false;
+    try{ cleared = localStorage.getItem(SEEDED_KEY) === "1"; }catch(e){}
+    if(cleared){ p.src = null; p.px = null; p.pdf = null; p.demo = false; }
+    else { p.src = sampleArt(p.w, p.h, p.art); p.px = null; p.pdf = null; p.demo = true; }
+  });
+}
+
+picker.addEventListener("change", function(){
+  var f = picker.files && picker.files[0];
+  if(!f || !pickTarget) return;
+  var p = P[pickTarget];
+  var isPdf = /\.pdf$/i.test(f.name) || f.type === "application/pdf";
+  (isPdf ? loadPdf(f, p) : loadImage(f, p)).then(function(){
+    p.local = true; p.asset = false;
+    dbPut(p.id, {src:p.src, px:p.px, pdf:p.pdf});
+    try{ localStorage.setItem(SEEDED_KEY,"1"); }catch(e){}
+    refresh();
+  }, function(err){
+    alert(err && err.message ? err.message : "Soubor se nepodařilo načíst.");
+  });
+});
+
+/* ============ ovládání ============ */
+var drag = null;
+stage.addEventListener("pointerdown", function(e){
+  if(ui.unfold) return;            // v nárysu se neotáčí
+  drag = {x:e.clientX, y:e.clientY, rx:cam.rx, ry:cam.ry};
+  try{ stage.setPointerCapture(e.pointerId); }catch(err){}
+});
+stage.addEventListener("pointermove", function(e){
+  if(!drag) return;
+  cam.ry = clamp(drag.ry + (e.clientX-drag.x)*0.28, -75, 75);
+  cam.rx = clamp(drag.rx + (e.clientY-drag.y)*0.20, -12, 70);
+  renderCam();
+});
+["pointerup","pointercancel"].forEach(function(t){
+  stage.addEventListener(t, function(){ drag = null; });
+});
+stage.addEventListener("wheel", function(e){
+  e.preventDefault();
+  cam.zoom = clamp(cam.zoom - e.deltaY*0.8, -1400, 1700);
+  renderCam();
+}, {passive:false});
+stage.addEventListener("keydown", function(e){
+  if(ui.unfold) return;
+  var k = e.key, step = 5;
+  if(k==="ArrowLeft") cam.ry = clamp(cam.ry-step,-75,75);
+  else if(k==="ArrowRight") cam.ry = clamp(cam.ry+step,-75,75);
+  else if(k==="ArrowUp") cam.rx = clamp(cam.rx-step,-12,70);
+  else if(k==="ArrowDown") cam.rx = clamp(cam.rx+step,-12,70);
+  else if(k==="+"||k==="=") cam.zoom = clamp(cam.zoom+90,-1400,1700);
+  else if(k==="-") cam.zoom = clamp(cam.zoom-90,-1400,1700);
+  else return;
+  e.preventDefault(); renderCam();
+});
+function clamp(v,a,b){ return v<a?a:(v>b?b:v); }
+
+document.getElementById("zin").addEventListener("click", function(){ cam.zoom = clamp(cam.zoom+180,-1400,1700); renderCam(); });
+document.getElementById("zout").addEventListener("click", function(){ cam.zoom = clamp(cam.zoom-180,-1400,1700); renderCam(); });
+
+var VIEWS = {front:[4,0,0], l34:[9,30,0], r34:[9,-30,0], top:[64,0,0]};
+Array.prototype.forEach.call(document.querySelectorAll("[data-view]"), function(btn){
+  btn.addEventListener("click", function(){
+    var v = VIEWS[btn.dataset.view];
+    cam.rx = v[0]; cam.ry = v[1]; cam.zoom = v[2];
+    if(ui.unfold){ ui.unfold = false; unfoldBtn.setAttribute("aria-pressed","false"); render3d(); }
+    renderCam();
+  });
+});
+var unfoldBtn = document.getElementById("unfoldBtn");
+unfoldBtn.addEventListener("click", function(){
+  ui.unfold = !ui.unfold;
+  unfoldBtn.setAttribute("aria-pressed", String(ui.unfold));
+  if(ui.unfold){ cam.rx = 0; cam.ry = 0; cam.zoom = 0; }
+  else { cam.rx = 7; cam.ry = -14; cam.zoom = 0; }
+  refresh();
+});
+var cutBtn = document.getElementById("cutBtn");
+cutBtn.setAttribute("aria-pressed", String(ui.cut));
+cutBtn.addEventListener("click", function(){
+  ui.cut = !ui.cut;
+  cutBtn.setAttribute("aria-pressed", String(ui.cut));
+  saveUI(); renderCam();
+});
+var dimsBtn = document.getElementById("dimsBtn");
+dimsBtn.addEventListener("click", function(){
+  ui.dims = !ui.dims; dimsBtn.setAttribute("aria-pressed", String(ui.dims)); render3d();
+});
+function toggle(btnId, key){
+  var b = document.getElementById(btnId);
+  b.setAttribute("aria-pressed", String(ui[key]));
+  b.addEventListener("click", function(){
+    ui[key] = !ui[key]; b.setAttribute("aria-pressed", String(ui[key])); saveUI(); render3d();
+  });
+}
+toggle("tTv","tv"); toggle("tCounter","counter"); toggle("tFascia","fascia");
+
+var tvSizeEl = document.getElementById("tvSize"), tvPosEl = document.getElementById("tvPos");
+tvSizeEl.addEventListener("change", function(){
+  ui.tvSize = parseInt(tvSizeEl.value,10);
+  P.tv.w = TVS[ui.tvSize][0]; P.tv.h = TVS[ui.tvSize][1];
+  if(P.tv.demo) P.tv.src = sampleArt(P.tv.w, P.tv.h, "ui");
+  saveUI(); refresh();
+});
+tvPosEl.addEventListener("change", function(){ ui.tvPos = tvPosEl.value; saveUI(); render3d(); });
+
+/* ============ boot ============ */
+function refresh(){ render3d(); renderCam(); renderCards(); }
+
+loadUI();
+tvSizeEl.value = String(ui.tvSize);
+tvPosEl.value = ui.tvPos;
+P.tv.w = TVS[ui.tvSize][0]; P.tv.h = TVS[ui.tvSize][1];
+dimsBtn.setAttribute("aria-pressed", String(ui.dims));
+
+renderCam();
+seedSamples();
+refresh();
+
+openDB().then(function(db){
+  DB = db;
+  if(!DB) return null;
+  return Promise.all(DEFAULTS.map(function(d){
+    return dbGet(d.id).then(function(rec){
+      if(rec && rec.src){
+        var p = P[d.id];
+        p.src = rec.src; p.px = rec.px; p.pdf = rec.pdf || null;
+        p.demo = false; p.local = true;
+      }
+    });
+  }));
+}).then(function(){
+  var cleared = false;
+  try{ cleared = localStorage.getItem(SEEDED_KEY) === "1"; }catch(e){}
+  if(cleared){
+    DEFAULTS.forEach(function(d){ if(P[d.id].demo){ P[d.id].src = null; P[d.id].demo = false; } });
+  }
+  refresh();
+  return loadAssets();
+}).then(function(){ refresh(); });
+
+if(document.fonts && document.fonts.ready){
+  document.fonts.ready.then(function(){
+    DEFAULTS.forEach(function(d){ if(P[d.id].demo) P[d.id].src = sampleArt(P[d.id].w, P[d.id].h, d.art); });
+    refresh();
+  });
+}
+})();
+</script>
+</body>
+</html>

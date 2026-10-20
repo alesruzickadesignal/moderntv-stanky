@@ -1,11 +1,11 @@
-# assets — grafika dodaná v repozitáři
+# assets — grafika stánku FUTURECOM dodaná v repozitáři
 
 Co je tady, uvidí **každý**, kdo otevře veřejný odkaz. Pojmenuj soubor podle panelu,
 spusť `python3 build.py` a pushni.
 
 | panel | názvy souboru, které build pozná |
 |---|---|
-| Zadní stěna 400 × 300 cm | `back`, `zadni`, `zadni-stena` |
+| Zadní stěna 400 × 300 cm | `back`, `zadni`, `zadni-stena`, `stena` |
 | Levá stěna 300 × 300 cm | `left`, `leva`, `leva-stena` |
 | Pravá stěna 300 × 300 cm | `right`, `prava`, `prava-stena` |
 | Lišta 200 × 70 cm | `fascia`, `lista`, `placa` |
@@ -23,7 +23,7 @@ Stránka soubory stahuje a vykresluje v prohlížeči, takže tisková PDF ji zp
 na desítky sekund. Náhled vyrobí macOS `sips`:
 
 ```bash
-sips -s format jpeg -s formatOptions 80 -Z 2400 tisk.pdf --out assets/back.jpg
+sips -s format jpeg -s formatOptions 80 -Z 2400 tisk.pdf --out stanek-futurecom/assets/back.jpg
 ```
 
 U rastrového náhledu aplikace hlásí jen poměr stran, ne PPI — měřilo by náhled,

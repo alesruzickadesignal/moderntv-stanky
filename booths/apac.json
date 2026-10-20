@@ -1,0 +1,12 @@
+{
+  "id": "apac",
+  "title": "Stánek APAC",
+  "sub": "1 stěna · 1,90 × 2,50 m",
+  "jira": "IPTV-6702",
+  "layout": "wall",
+  "panels": {
+    "back": {"w": 190, "h": 250, "name": "Stěna"},
+    "tv": {}
+  },
+  "tv": {"size": 50, "centerFromTop": 85.9}
+}

@@ -1,0 +1,16 @@
+{
+  "id": "futurecom",
+  "title": "Stánek FUTURECOM",
+  "sub": "4,00 × 3,00 m · stěny 3,00 m + lišta 0,70 m = celkem 3,70 m",
+  "jira": "IPTV-6427",
+  "layout": "u",
+  "panels": {
+    "back": {"w": 400, "h": 300},
+    "left": {"w": 300, "h": 300},
+    "right": {"w": 300, "h": 300},
+    "fascia": {"w": 200, "h": 70},
+    "counter": {"w": 108, "h": 95},
+    "tv": {}
+  },
+  "tv": {"size": 55, "pos": "back"}
+}

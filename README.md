@@ -1,83 +1,74 @@
-# Stánek FUTURECOM
+# ModernTV stánky
 
-Interaktivní 3D náhled výstavního stánku. Nahraješ grafiku na stěny, lištu, čelo pultu
+Interaktivní 3D náhledy výstavních stánků. Nahraješ grafiku na stěny, lištu, čelo pultu
 a na obrazovku televize a hned vidíš, jak stánek vypadá — plus kontrolu, jestli jsou data
 dost velká pro tisk.
 
-**Živá verze: https://alesruzickadesignal.github.io/stanek-futurecom/**
+**Živě: https://alesruzickadesignal.github.io/moderntv-stanky/**
+
+| stánek | odkaz |
+|---|---|
+| FUTURECOM — 3 stěny 4,00 × 3,00 m, lišta, pult, TV na stojanu | [stanek-futurecom/](https://alesruzickadesignal.github.io/moderntv-stanky/stanek-futurecom/) |
+| APAC — samostatná stěna 1,90 × 2,50 m, TV na stěně | [stanek-apac/](https://alesruzickadesignal.github.io/moderntv-stanky/stanek-apac/) |
 
 ## Co to umí
 
 - **3D náhled** — tažením otáčení, kolečkem zoom, presety čelní / ¾ / půdorys.
-  Stěny jsou plné; přepínač **Řez** odkryje tu, za kterou stojí kamera, aby šlo
-  nahlédnout dovnitř.
-- **Nárys** — všech pět tiskových ploch čelně vedle sebe ve správném vzájemném
-  měřítku. Na kontrolu grafiky před tiskem použitelnější než 3D.
+  Přepínač **Řez** odkryje stěnu, za kterou stojí kamera.
+- **Nárys** — tiskové plochy čelně vedle sebe ve správném vzájemném měřítku.
 - **JPG, PNG i PDF.** U bitmap se počítá PPI na finální rozměr panelu proti potřebnému
-  rozlišení podle pozorovací vzdálenosti (1′ zorného úhlu — stěny z 1,5 m ≈ 23 PPI,
-  čelo pultu z 0,6 m ≈ 57 PPI). U PDF se místo toho čte fyzický rozměr stránky a z něj
-  se pozná **měřítko** (1:1, 1:10 …) a **spadávka** navíc oproti čistému formátu.
-- **Poměr stran** hlídá deformaci — náhled grafiku roztahuje na plný panel, stejně
-  jako tisk.
-- Rozměry každého panelu se dají přepsat v cm, scéna se přepočítá.
-
-Výchozí rozměry: půdorys 4,00 × 3,00 m, stěny 3,00 m, lišta 2,00 × 0,70 m,
-čelo pultu 1,08 × 0,95 m, celkem 3,70 m na výšku.
-
-## Grafika pro všechny, kdo otevřou odkaz
-
-Vlož soubor do [`assets/`](assets/), pojmenuj ho podle panelu (`back.jpg`,
-`leva-stena.pdf`, `lista.png` — celá tabulka názvů je v `assets/README.md`),
-spusť build a pushni:
-
-```bash
-python3 build.py && git add -A && git commit -m "grafika stěn" && git push
-```
-
-`build.py` z toho poskládá `assets/panels.json` a stránka grafiku načte každému
-návštěvníkovi.
-
-**Dávej sem zmenšené náhledy, ne tisková data.** Stránka se jinak načítá desítky
-sekund. Z tiskového PDF náhled vyrobí jednou ranou macOS `sips`:
-
-```bash
-sips -s format jpeg -s formatOptions 80 -Z 2400 tisk.pdf --out assets/back.jpg
-```
-
-Rastrový soubor z repozitáře má v aplikaci odznak **náhled z repozitáře** a hlásí
-se u něj jen poměr stran — PPI by měřilo náhled, ne tisková data, takže by
-zbytečně svítilo červeně. Poměr stran smysl má, ten odhalí špatné proporce.
-
-Když do `assets/` dáš přímo **PDF**, přečte se z něj fyzický rozměr stránky
-a aplikace hlásí měřítko (1:1, 1:10 …) i spadávku. Je to přesnější, ale pomalé —
-hodí se to na vlastní kontrolu, ne na sdílený odkaz.
-
-## Soukromí
-
-Grafika **nahraná v aplikaci** zůstává jen v prohlížeči (IndexedDB) — nikam se
-neodesílá a není v repozitáři. Je nadřazená tomu, co je v `assets/`: co si nahraješ,
-vidíš jen ty, a tlačítkem **Odebrat** se vrátí verze z repozitáře.
-
-Pořadí: vlastní nahraná grafika → `assets/` → ukázka kreslená za běhu.
+  rozlišení podle pozorovací vzdálenosti. U PDF se čte fyzický rozměr stránky a z něj
+  se pozná **měřítko** (1:1, 1:10 …) a **spadávka**.
+- **Poměr stran** hlídá deformaci. Rozměry panelů se dají přepsat v cm.
 
 ## Struktura
 
 | | |
 |---|---|
-| `src/booth.html` | zdroj — holý obsah stránky bez `<!doctype>` a `<head>` |
-| `index.html` | generovaný soubor, který servíruje GitHub Pages |
-| `build.py` | doplní obálku (charset, viewport, reset), přesune `<title>`/`<link>` do `<head>` a poskládá manifest assetů |
-| `assets/` | grafika dodaná v repozitáři + `panels.json` (generovaný) |
+| `src/booth.html` | jediný zdroj pro všechny stánky — holý obsah stránky bez `<!doctype>` a `<head>` |
+| `booths/<id>.json` | konfigurace stánku: název, podtitulek, Jira, layout, panely s rozměry, TV |
+| `build.py` | z každé konfigurace vyrobí `stanek-<id>/index.html` + `stanek-<id>/assets/panels.json` a kořenový rozcestník `index.html` |
+| `stanek-<id>/assets/` | grafika dodaná v repozitáři (zmenšené náhledy) |
+| `index.html`, `stanek-*/index.html`, `panels.json` | generované — needitovat ručně |
 
-Zdroj je bez obálky proto, že v téhle podobě ho publikují Claude Artifacts, které si ji
-přidávají samy. Po úpravě `src/booth.html` je potřeba spustit:
+Po každé změně zdroje, konfigurace nebo grafiky:
 
 ```bash
-python3 build.py
+python3 build.py && git add -A && git commit -m "…" && git push
 ```
+
+Zdroj je bez obálky proto, že v téhle podobě ho publikují Claude Artifacts. Když v něm
+chybí `window.BOOTH` (samostatně publikovaný soubor), platí výchozí konfigurace
+FUTURECOM zapsaná přímo v `src/booth.html` — při změně `booths/futurecom.json` ji uprav taky.
+
+## Nový stánek
+
+1. Zkopíruj `booths/apac.json` (jedna stěna) nebo `booths/futurecom.json` (tři stěny)
+   na `booths/<id>.json` a uprav. Klíče:
+   - `layout`: `"u"` = zadní + dvě boční stěny, lišta, pult, TV na stojanu;
+     `"wall"` = jen jedna samostatná stěna (panel `back`), TV na stěně
+   - `panels`: které panely stánek má (`back`, `left`, `right`, `fascia`, `counter`, `tv`)
+     a jejich výchozí `w`/`h` v cm, případně `name`
+   - `tv.size`: výchozí úhlopříčka (43/50/55/65); `tv.pos` (`back`/`left`/`right`) pro `"u"`;
+     `tv.centerFromTop` = střed TV v cm od horní hrany stěny pro `"wall"`
+2. Náhledy grafiky dej do `stanek-<id>/assets/` (názvy viz `stanek-futurecom/assets/README.md`).
+3. `python3 build.py` — vznikne `stanek-<id>/` a odkaz v rozcestníku.
+
+Úložiště v prohlížeči (IndexedDB `stanek-<id>`, localStorage `stanek-<id>-cfg`
+a `stanek-<id>-seeded`) je pro každý stánek zvlášť — stánky sdílí jeden origin.
+
+## Grafika a soukromí
+
+**Dávej do repozitáře zmenšené náhledy, ne tisková data.** Z tiskového PDF náhled
+vyrobí macOS `sips`:
+
+```bash
+sips -s format jpeg -s formatOptions 80 -Z 2400 tisk.pdf --out stanek-<id>/assets/back.jpg
+```
+
+U náhledu z repozitáře se hlásí jen poměr stran (PPI by měřilo náhled). Grafika
+**nahraná v aplikaci** zůstává jen v prohlížeči a má přednost před `assets/`;
+tlačítko **Odebrat** vrátí verzi z repozitáře.
 
 Bez knihoven, kromě [pdf.js](https://mozilla.github.io/pdf.js/) z CDN pro čtení PDF.
 3D je čisté CSS `transform`, žádný WebGL.
-
-Ukázková grafika v prvním spuštění se kreslí do canvasu za běhu — je to placeholder,
-ne skutečný návrh.
