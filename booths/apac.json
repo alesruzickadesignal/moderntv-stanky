@@ -8,5 +8,6 @@
     "back": {"w": 190, "h": 250, "name": "Stěna"},
     "tv": {}
   },
-  "tv": {"size": 55, "top": 50}
+  "tv": {"size": 55, "top": 50},
+  "table": {"d": 80, "h": 75, "dist": 90, "chairs": 2}
 }

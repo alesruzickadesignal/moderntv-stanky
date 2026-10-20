@@ -51,6 +51,10 @@ FUTURECOM zapsaná přímo v `src/booth.html` — při změně `booths/futurecom
      a jejich výchozí `w`/`h` v cm, případně `name`
    - `tv.size`: výchozí úhlopříčka (43/50/55/65); `tv.pos` (`back`/`left`/`right`) pro `"u"`;
      `tv.top` = horní hrana TV (vč. rámu) v cm od horní hrany stěny pro `"wall"`
+   - `table` (volitelně): kulatý bistro stolek a dvě šedá křesla po stranách před stěnou, `{"d":80,"h":75,"dist":90,"chairs":2}` v cm,
+     `d` = průměr desky, `h` = výška, `dist` = od líce stěny ke středu stolku, `chairs` = počet křesel (0–2); zapíná se tlačítkem **Stolek**, netiskne se.
+     Nábytek kreslí three.js do WebGL vrstvy přes CSS scénu (načte se jen u stánku s `table`); model křesla musí ležet
+     v `stanek-<id>/assets/furniture/chair.glb`, stolek se modeluje v kódu
 2. Náhledy grafiky dej do `stanek-<id>/assets/` (názvy viz `stanek-futurecom/assets/README.md`).
 3. `python3 build.py` — vznikne `stanek-<id>/` a odkaz v rozcestníku.
 
@@ -70,5 +74,12 @@ U náhledu z repozitáře se hlásí jen poměr stran (PPI by měřilo náhled).
 **nahraná v aplikaci** zůstává jen v prohlížeči a má přednost před `assets/`;
 tlačítko **Odebrat** vrátí verzi z repozitáře.
 
-Bez knihoven, kromě [pdf.js](https://mozilla.github.io/pdf.js/) z CDN pro čtení PDF.
-3D je čisté CSS `transform`, žádný WebGL.
+Knihovny jen z CDN: [pdf.js](https://mozilla.github.io/pdf.js/) pro čtení PDF a u stánků se stolkem
+[three.js](https://threejs.org/) 0.170.0 pro nábytek. Stěny, TV a podlaha jsou čisté CSS `transform`;
+WebGL kamera se z CSS kamery dopočítává (perspektiva a `perspective-origin` ze stylu `.stage`).
+
+## Licence modelů
+
+- `stanek-apac/assets/furniture/chair.glb` — [„Zel-velvetsilk-dustpink (geometry)"](https://sketchfab.com/3d-models/zel-velvetsilk-dustpink-geometry-f655b8411de94f13acc0439a82b94462)
+  od sil3dfurniture (Sketchfab, dnes účet deephousefurniture), licence [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/).
+  Upraveno: textura látky přebarvená z růžové na šedou, textury zmenšené na 512 px, vypuštěné tangenty.

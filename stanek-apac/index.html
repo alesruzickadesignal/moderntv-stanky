@@ -15,7 +15,7 @@ img{max-width:100%}
 <title>Stánek APAC</title>
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@100..125,400..700&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
-<script>window.BOOTH = {"id": "apac", "title": "Stánek APAC", "sub": "1 stěna · 1,90 × 2,50 m", "jira": "IPTV-6702", "layout": "wall", "panels": {"back": {"w": 190, "h": 250, "name": "Stěna"}, "tv": {}}, "tv": {"size": 55, "top": 50}};</script>
+<script>window.BOOTH = {"id": "apac", "title": "Stánek APAC", "sub": "1 stěna · 1,90 × 2,50 m", "jira": "IPTV-6702", "layout": "wall", "panels": {"back": {"w": 190, "h": 250, "name": "Stěna"}, "tv": {}}, "tv": {"size": 55, "top": 50}, "table": {"d": 80, "h": 75, "dist": 90, "chairs": 2}};</script>
 </head>
 <body>
 <style>
@@ -83,6 +83,8 @@ main{display:flex; flex-direction:column; flex:1; min-height:0}
 }
 .stage:active{cursor:grabbing}
 .stage:focus-visible{outline:2px solid var(--accent-bright); outline-offset:-3px}
+/* WebGL vrstva s nábytkem přesně přes .stage, myš jde skrz na scénu */
+.furn{position:absolute; inset:0; width:100%; height:100%; pointer-events:none}
 .world{position:absolute; left:50%; top:50%; width:0; height:0; transform-style:preserve-3d;}
 .piece{position:absolute; left:0; top:0; transform-style:preserve-3d;}
 .pl{ /* a flat plane */
@@ -94,19 +96,19 @@ main{display:flex; flex-direction:column; flex:1; min-height:0}
 /* rub stěny = pohled zvenku: světlý textil v hliníkovém SEG rámu, ne díra */
 .pl .rear{transform:rotateY(180deg);
   background:linear-gradient(175deg,#DFE2DC 0%,#CDD1C9 55%,#BEC3BA 100%);
-  box-shadow:inset 0 0 0 4px #A9AEA4, inset 0 0 0 5px rgba(0,0,0,.14);
+  box-shadow:inset 0 0 0 calc(4px*var(--k,1)) #A9AEA4, inset 0 0 0 calc(5px*var(--k,1)) rgba(0,0,0,.14);
 }
 .blank{
   background-color:var(--blank);
-  background-image:repeating-linear-gradient(45deg, transparent 0 14px, rgba(150,134,114,.18) 14px 15px);
-  box-shadow:inset 0 0 0 1px var(--blank-line);
+  background-image:repeating-linear-gradient(45deg, transparent 0 calc(14px*var(--k,1)), rgba(150,134,114,.18) calc(14px*var(--k,1)) calc(15px*var(--k,1)));
+  box-shadow:inset 0 0 0 calc(1px*var(--k,1)) var(--blank-line);
 }
-.sel > .face{outline:3px solid var(--accent-bright); outline-offset:-3px}
+.sel > .face{outline:calc(3px*var(--k,1)) solid var(--accent-bright); outline-offset:calc(-3px*var(--k,1))}
 
 .dimtag{
   position:absolute; left:50%; top:50%; transform:translate(-50%,-50%);
-  font-family:"IBM Plex Mono", monospace; font-size:16px; white-space:nowrap;
-  background:rgba(12,16,10,.72); color:#F7E4CE; padding:4px 9px; border-radius:4px;
+  font-family:"IBM Plex Mono", monospace; font-size:calc(16px*var(--k,1)); white-space:nowrap;
+  background:rgba(12,16,10,.72); color:#F7E4CE; padding:calc(4px*var(--k,1)) calc(9px*var(--k,1)); border-radius:calc(4px*var(--k,1));
   letter-spacing:.02em;
 }
 /* zástěra podlahy PŘED stánkem – nikdy nesahá za zadní stěnu, jinak by ji CSS
@@ -268,6 +270,7 @@ details.notes b{color:var(--text); font-weight:600}
         <button class="chip" id="tTv" aria-pressed="true">Televize</button>
         <button class="chip u-only" id="tCounter" aria-pressed="true">Pult</button>
         <button class="chip u-only" id="tFascia" aria-pressed="true">Lišta</button>
+        <button class="chip" id="tTable" aria-pressed="true" hidden>Stolek</button>
         <select id="tvSize" aria-label="Úhlopříčka TV">
           <option value="43">43″</option><option value="50">50″</option>
           <option value="55" selected>55″</option><option value="65">65″</option>
@@ -313,6 +316,11 @@ details.notes b{color:var(--text); font-weight:600}
           <li class="wall-only"><b>Výchozí rozměry</b> odpovídají podkladu grafiky (viz záhlaví).
             Televize visí na stěně uprostřed volného pole v grafice; úhlopříčka se dá přepnout
             a pozice se drží i při změně rozměru stěny.</li>
+          <li id="furnCredit" hidden><b>Stolek a křesla</b> jsou orientační, netisknou se. Kreslí je
+            <a href="https://threejs.org/">three.js</a> (WebGL) přes CSS scénu. Křeslo je model
+            <a href="https://sketchfab.com/3d-models/zel-velvetsilk-dustpink-geometry-f655b8411de94f13acc0439a82b94462">„Zel-velvetsilk-dustpink"</a>
+            od sil3dfurniture (Sketchfab), licence <a href="https://creativecommons.org/licenses/by/4.0/">CC BY 4.0</a>,
+            přebarvené na šedou a zmenšené; stolek je modelovaný v kódu.</li>
         </ul>
       </details>
     </aside>
@@ -348,7 +356,7 @@ CATALOG.concat(DEFAULTS).forEach(function(d){
   P[d.id] = Object.assign({}, d, {src:null, px:null, pdf:null, demo:false, local:false, asset:false, loading:false});
 });
 
-var ui = {tv:true, counter:true, fascia:true, dims:false, unfold:false, cut:false, tvSize:B.tv.size, tvPos:B.tv.pos || "back", sel:null};
+var ui = {tv:true, table:true, counter:true, fascia:true, dims:false, unfold:false, cut:false, tvSize:B.tv.size, tvPos:B.tv.pos || "back", sel:null};
 var PERSP = 2600;
 var cam = {rx:7, ry:-14, zoom:0};
 
@@ -380,7 +388,7 @@ function saveUI(){
     var d = {};
     Object.keys(P).forEach(function(k){ d[k] = {w:P[k].w, h:P[k].h}; });
     localStorage.setItem(CFG_KEY, JSON.stringify({dims:d, ui:{
-      tv:ui.tv, counter:ui.counter, fascia:ui.fascia, cut:ui.cut, tvSize:ui.tvSize, tvPos:ui.tvPos}}));
+      tv:ui.tv, table:ui.table, counter:ui.counter, fascia:ui.fascia, cut:ui.cut, tvSize:ui.tvSize, tvPos:ui.tvPos}}));
   }catch(e){}
 }
 function loadUI(){
@@ -514,12 +522,23 @@ Object.keys(G).forEach(function(k){
   var t = document.createElement("div"); t.className="dimtag"; t.hidden = true;
   G[k].appendChild(t); G[k]._tag = t;
 });
+/* Chrome rastruje roviny s perspektivou v jejich layoutové velikosti (× DPR) a teprve
+   pak je zvětší, takže při 1 cm = 1 px byla grafika rozmazaná. Panely s grafikou se
+   proto vykreslí RES× větší a zpět je zmenší scale() v jejich vlastní transformaci –
+   promítnutý obraz je stejný, jen ostřejší. Dekorace (podlaha, boky pultu, stojan)
+   zůstávají 1:1, jinak by zbytečně žraly paměť GPU. Vnitřní px (rámeček, popisky)
+   násobí CSS proměnná --k. */
+var RES = 4, RES_MAX = 2048;   // RES_MAX: strop delší strany v px, aby obří panel nezahltil GPU
+[G.back, G.left, G.right, G.fascia, G.cFront, G.tvFrame].forEach(function(e){ e._sharp = true; });
 
 function put(el, w, h, x, yTop, z, ry, rx){
-  el.style.width = w+"px"; el.style.height = h+"px";
-  el.style.marginLeft = (-w/2)+"px"; el.style.marginTop = (-h/2)+"px";
+  var k = el._k = el._sharp ? Math.min(RES, RES_MAX/Math.max(w, h)) : 1;
+  el.style.setProperty("--k", k);
+  el.style.width = w*k+"px"; el.style.height = h*k+"px";
+  el.style.marginLeft = (-w*k/2)+"px"; el.style.marginTop = (-h*k/2)+"px";
   el.style.transform = "translate3d("+x+"px,"+yTop+"px,"+z+"px)"
-    + (ry ? " rotateY("+ry+"deg)" : "") + (rx ? " rotateX("+rx+"deg)" : "");
+    + (ry ? " rotateY("+ry+"deg)" : "") + (rx ? " rotateX("+rx+"deg)" : "")
+    + (k !== 1 ? " scale("+1/k+")" : "");
 }
 function paint(el, p){
   var f = el.querySelector(".face");
@@ -626,7 +645,7 @@ function render3d(){
     else { tx = W/2-16; tz = D/2-tw/2-40; tr = -90; }
     put(G.tvFrame, tw+bez*2, th+bez*2, tx, EYE-ctr, tz, tr, 0);
     var ff = G.tvFrame.querySelector(".face");
-    ff.style.border = bez+"px solid #101214"; ff.style.backgroundColor = "#05080B";
+    ff.style.border = bez*G.tvFrame._k+"px solid #101214"; ff.style.backgroundColor = "#05080B";
     paint(G.tvFrame, P.tv); tag(G.tvFrame, ui.tvSize+"″ · "+tw.toFixed(0)+" × "+th.toFixed(0)+" cm");
     put(G.tvPole, 14, ctr-th/2, tx, EYE-(ctr-th/2)/2, tz, tr, 0);
     G.tvPole.querySelector(".face").style.background = "#1C2024";
@@ -638,12 +657,17 @@ function render3d(){
   Object.keys(G).forEach(function(k){ G[k].classList.remove("sel"); });
   var map = {back:G.back, left:G.left, right:G.right, fascia:G.fascia, counter:G.cFront, tv:G.tvFrame};
   if(ui.sel && map[ui.sel]) map[ui.sel].classList.add("sel");
+  furnDraw();
 }
 
 /* kamera se vždy dopočítá tak, aby se stánek vešel do plochy náhledu;
    cam.zoom je jen uživatelská odchylka od tohoto výchozího odstupu */
 function fitBase(){
   var W = P.back.w, D = WALL ? 0 : P.left.w, H = P.back.h;
+  if(B.table && ui.table && WALL){   // stolek vystupuje před stěnu, křesla i do stran
+    D = B.table.dist + B.table.d/2;
+    W = Math.max(W, B.table.d + 2*(CHAIR_GAP + CHAIR_DEPTH));
+  }
   var r = cam.ry * Math.PI/180, rx = cam.rx * Math.PI/180;
   var effW, effH;
   if(ui.unfold){
@@ -680,11 +704,139 @@ function renderCam(){
   var lift = WALL ? P.back.h/2 - EYE : 0;
   /* záporné rotateX = pohled shora: kladné by scénu překlopilo a podlaha by se
      dostala před stěny */
-  world.style.transform = "translateZ("+dolly.toFixed(1)+"px)" + (lift ? " translateY("+lift+"px)" : "") + " rotateX("+(-cam.rx)+"deg) rotateY("+cam.ry+"deg)";
+  cam.dolly = +dolly.toFixed(1); cam.lift = lift;   // nábytek ve WebGL musí dostat přesně tatáž čísla
+  world.style.transform = "translateZ("+cam.dolly+"px)" + (lift ? " translateY("+lift+"px)" : "") + " rotateX("+(-cam.rx)+"deg) rotateY("+cam.ry+"deg)";
   occlude();
+  furnDraw();
 }
 if(window.ResizeObserver){ new ResizeObserver(renderCam).observe(stage); }
 else window.addEventListener("resize", renderCam);
+
+/* ============ stolek a křesla: WebGL vrstva ============
+   Zaoblený nábytek se z CSS rovin věrohodně složit nedá, proto ho kreslí three.js
+   do průhledného canvasu přes scénu. Načítá se jen u stánku s `table` v konfiguraci.
+   Kamera three.js je přesně ta CSS: perspektiva d a perspective-origin (ox, oy) ze
+   stylu .stage, svět v jejím středu s transformací z renderCam(), CSS osa y míří
+   dolů, 1 px = 1 cm. Nábytek stojí vždy před stěnou a nad podlahou, takže kreslit ho
+   přes CSS vrstvu je hloubkově správně; pro pohled zespodu podlahy (rx < 0) ho zakryje
+   neviditelná kopie podlahy. */
+var THREE_URL = "https://cdn.jsdelivr.net/npm/three@0.170.0";
+var CHAIR_URL = "assets/furniture/chair.glb", CHAIR_DEPTH = 72, CHAIR_GAP = 10;   // hloubka modelu křesla v cm, mezera ke stolku
+var furn = null;
+function furnDraw(){
+  if(furn && !furn.queued){ furn.queued = true; requestAnimationFrame(furn.draw); }
+}
+function initFurniture(){
+  Promise.all([
+    import(THREE_URL + "/+esm"),
+    import(THREE_URL + "/examples/jsm/loaders/GLTFLoader.js/+esm"),
+    import(THREE_URL + "/examples/jsm/environments/RoomEnvironment.js/+esm")
+  ]).then(function(mod){
+    var T3 = mod[0], T = B.table;
+    var canvas = document.createElement("canvas");
+    canvas.className = "furn"; canvas.setAttribute("aria-hidden", "true");
+    stage.insertAdjacentElement("afterend", canvas);
+    var gl = new T3.WebGLRenderer({canvas:canvas, alpha:true, antialias:true});
+    gl.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+    gl.toneMapping = T3.ACESFilmicToneMapping;
+    gl.shadowMap.enabled = true; gl.shadowMap.type = T3.VSMShadowMap;
+
+    var scene = new T3.Scene();
+    scene.environment = new T3.PMREMGenerator(gl).fromScene(new mod[2].RoomEnvironment(), 0.04).texture;
+    scene.environmentIntensity = 0.55;
+    /* root = souřadnice nábytku (cm, y nahoru, podlaha y = 0, líc stěny z = -D/2, z k divákovi)
+       převedené do prostoru kamery; matici skládá draw() */
+    var root = new T3.Group(); root.matrixAutoUpdate = false; scene.add(root);
+    var cam3 = new T3.PerspectiveCamera();   // v počátku, dívá se po −z; projekci skládá draw()
+
+    root.add(new T3.HemisphereLight(0xffffff, 0x45464a, 0.6));
+    var key = new T3.DirectionalLight(0xffffff, 2.4);
+    key.position.set(-110, 380, 300); key.castShadow = true;
+    var sc = key.shadow.camera;
+    sc.left = sc.bottom = -230; sc.right = sc.top = 230; sc.near = 50; sc.far = 900;
+    key.shadow.mapSize.set(2048, 2048); key.shadow.radius = 9; key.shadow.blurSamples = 20; key.shadow.bias = -0.0004;
+    root.add(key, key.target);
+
+    var plane = function(mat){ var m = new T3.Mesh(new T3.PlaneGeometry(1, 1), mat); m.rotation.x = -Math.PI/2; root.add(m); return m; };
+    // měkké stíny na podlahu před stěnou, jinde průhledné (za stěnu nesahá)
+    var catcher = plane(new T3.ShadowMaterial({opacity:0.42}));
+    catcher.receiveShadow = true;
+    // neviditelná podlaha haly: zapisuje jen hloubku, zespodu nábytek zakryje jako CSS podlaha
+    var floor = plane(new T3.MeshBasicMaterial({colorWrite:false, side:T3.DoubleSide}));
+    floor.renderOrder = -1; floor.position.y = -1;
+
+    // stolek: bílá lakovaná deska se zaobleným okrajem na štíhlé noze s kulatou patkou
+    var R = T.d/2, H = T.h;
+    var prof = [[0,0],[21.5,0],[22.4,0.35],[22.6,0.9],[22,1.4],[15,2],[8,2.8],[4.6,4.4],[3.5,7],
+                [3,14],[2.8,H-14],[3.1,H-8],[4.6,H-4.6],[8,H-3.1],[R-1.2,H-2.6],[R-0.35,H-2.25],
+                [R,H-1.4],[R-0.35,H-0.45],[R-1.2,H],[0,H]];
+    var table = new T3.Mesh(
+      new T3.LatheGeometry(prof.map(function(p){ return new T3.Vector2(p[0], p[1]); }), 96),
+      new T3.MeshPhysicalMaterial({color:0xf3f3f1, roughness:0.32, clearcoat:1, clearcoatRoughness:0.06}));
+    table.castShadow = true; table.receiveShadow = true;
+    root.add(table);
+
+    // křesla: model z assets/, otočený čelem ke stolku
+    var chairs = [];
+    new mod[1].GLTFLoader().load(CHAIR_URL, function(g){
+      var m = g.scene;
+      m.scale.setScalar(0.1);   // model je v mm
+      var box = new T3.Box3().setFromObject(m), c = box.getCenter(new T3.Vector3());
+      m.position.set(-c.x, -box.min.y, -c.z);
+      m.traverse(function(o){
+        if(!o.isMesh) return;
+        o.castShadow = true; o.receiveShadow = true;
+        var mt = o.material;
+        if(mt.map){ mt.roughness = 0.9; mt.color.setHex(0xc4c7cb); mt.normalScale.setScalar(0.4); }   // světle šedá látka
+        else { mt.metalness = 0.6; mt.roughness = 0.35; }               // tmavé kovové nožky
+      });
+      [-1, 1].forEach(function(s){
+        var ch = new T3.Group(); ch.add(s < 0 ? m : m.clone());
+        ch.rotation.y = -s*Math.PI/2;   // model kouká po +z; levé (x < 0) se otočí na +x, pravé na −x
+        chairs.push(ch); root.add(ch);
+      });
+      furnDraw();
+    }, undefined, function(e){ console.warn("Křeslo se nenačetlo:", CHAIR_URL, e); });
+
+    var DEG = Math.PI/180, F = new T3.Matrix4().makeScale(1, -1, 1), tmp = new T3.Matrix4();
+    furn = {queued:false, w:0, h:0, draw:function(){
+      furn.queued = false;
+      canvas.hidden = !ui.table || ui.unfold;
+      if(canvas.hidden) return;
+      var w = stage.clientWidth, h = stage.clientHeight;
+      if(w !== furn.w || h !== furn.h){ gl.setSize(w, h, false); furn.w = w; furn.h = h; }
+
+      /* CSS: bod světa p → p' = Tz(dolly)·Ty(lift)·Rx(−rx)·Ry(ry)·p kolem středu stage,
+         promítnutý z oka (ox, oy, d) nad stage. Tady totéž jako kamera v počátku. */
+      var cs = getComputedStyle(stage), d = parseFloat(cs.perspective);
+      var o = cs.perspectiveOrigin.split(" ").map(parseFloat), n = 20;
+      cam3.projectionMatrix.makePerspective(-o[0]*n/d, (w-o[0])*n/d, o[1]*n/d, -(h-o[1])*n/d, n, 30000);
+      cam3.projectionMatrixInverse.copy(cam3.projectionMatrix).invert();
+      root.matrix.copy(F)
+        .multiply(tmp.makeTranslation(w/2 - o[0], h/2 - o[1], -d))
+        .multiply(tmp.makeTranslation(0, cam.lift, cam.dolly))
+        .multiply(tmp.makeRotationX(-cam.rx*DEG))
+        .multiply(tmp.makeRotationY(cam.ry*DEG))
+        .multiply(tmp.makeTranslation(0, EYE, 0))
+        .multiply(F);
+      root.matrixWorldNeedsUpdate = true;
+
+      // rozmístění: stejné souřadnice jako CSS scéna v render3d()
+      var D = WALL ? 0 : P.left.w, tz = -D/2 + T.dist, nCh = T.chairs == null ? 2 : T.chairs;
+      table.position.set(0, 0, tz);
+      chairs.forEach(function(ch, i){
+        var s = i ? 1 : -1;
+        ch.visible = i < nCh;
+        ch.position.set(s*(R + CHAIR_GAP + CHAIR_DEPTH/2), 0, tz);
+      });
+      key.target.position.set(0, 0, tz);
+      catcher.scale.set(600, 400, 1); catcher.position.set(0, 0, -D/2 + 200);
+      floor.scale.set(P.back.w + 700, 520, 1); floor.position.z = D/2 + 260;
+      gl.render(scene, cam3);
+    }};
+    furnDraw();
+  }).catch(function(e){ console.warn("Nábytek ve 3D se nenačetl:", e); });
+}
 
 /* ============ kontrola dat ============ */
 function reqPPI(dist){ return Math.max(12, Math.round(3438/dist)); }
@@ -902,7 +1054,7 @@ function loadPdf(file, p){
     return doc.getPage(1).then(function(page){
       var base = page.getViewport({scale:1});
       var wcm = base.width/72*2.54, hcm = base.height/72*2.54;
-      var k = Math.min(4, Math.max(0.25, 1800/Math.max(base.width, base.height)));
+      var k = Math.min(8, Math.max(0.25, 3200/Math.max(base.width, base.height)));   // delší strana ~3200 px
       var vp = page.getViewport({scale:k});
       var cv = document.createElement("canvas");
       cv.width = Math.round(vp.width); cv.height = Math.round(vp.height);
@@ -1069,7 +1221,8 @@ function toggle(btnId, key){
     ui[key] = !ui[key]; b.setAttribute("aria-pressed", String(ui[key])); saveUI(); render3d();
   });
 }
-toggle("tTv","tv"); toggle("tCounter","counter"); toggle("tFascia","fascia");
+toggle("tTv","tv"); toggle("tTable","table"); toggle("tCounter","counter"); toggle("tFascia","fascia");
+document.getElementById("tTable").addEventListener("click", renderCam);   // výřez kamery počítá i se stolkem
 
 var tvSizeEl = document.getElementById("tvSize"), tvPosEl = document.getElementById("tvPos");
 tvSizeEl.addEventListener("change", function(){
@@ -1084,6 +1237,11 @@ tvPosEl.addEventListener("change", function(){ ui.tvPos = tvPosEl.value; saveUI(
 function refresh(){ render3d(); renderCam(); renderCards(); }
 
 loadUI();
+if(B.table){
+  document.getElementById("tTable").hidden = false;
+  document.getElementById("furnCredit").hidden = false;
+  initFurniture();
+}
 tvSizeEl.value = String(ui.tvSize);
 tvPosEl.value = ui.tvPos;
 P.tv.w = TVS[ui.tvSize][0]; P.tv.h = TVS[ui.tvSize][1];

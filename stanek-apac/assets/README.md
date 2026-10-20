@@ -18,3 +18,6 @@ sips -s format jpeg -s formatOptions 80 -Z 2400 Stánek.pdf --out stanek-apac/as
 
 TV 55″ visí vodorovně uprostřed, horní hrana rámu 50 cm od horní hrany stěny
 (podle specifikace pořadatele) — `tv.top` v `booths/apac.json`.
+
+`furniture/chair.glb` je 3D model křesla pro stolek (`table` v `booths/apac.json`), build.py
+ho nechává být. Původ a licence (CC BY 4.0) viz README v kořeni repozitáře.
