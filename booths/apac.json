@@ -8,5 +8,5 @@
     "back": {"w": 190, "h": 250, "name": "Stěna"},
     "tv": {}
   },
-  "tv": {"size": 50, "centerFromTop": 85.9}
+  "tv": {"size": 55, "top": 50}
 }

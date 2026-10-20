@@ -598,10 +598,10 @@ function render3d(){
     [G.tvFrame,G.tvPole,G.tvBase].forEach(function(e){ e.hidden = !ui.tv; });
     var tx, tz, tr;
     if(WALL){
-      /* TV visí na stěně uprostřed; střed v B.tv.centerFromTop cm od horní hrany
+      /* TV visí na stěně uprostřed; horní hrana rámu B.tv.top cm od horní hrany
          původní stěny – grafika se roztahuje s panelem, takže se přepočítá poměrem */
       tx = 0; tz = -D/2+4; tr = 0;
-      ctr = H - B.tv.centerFromTop * H / B.panels.back.h;
+      ctr = H - B.tv.top * H / B.panels.back.h - (th + bez*2)/2;
       G.tvPole.hidden = true; G.tvBase.hidden = true;
     }
     else if(ui.tvPos === "back"){ tx = W/2-tw/2-50; tz = -D/2+16; tr = 0; }

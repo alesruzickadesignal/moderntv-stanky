@@ -16,5 +16,5 @@ Náhled stěny je z grafikova PDF (190 × 250 cm), tisková data sem nepatří:
 sips -s format jpeg -s formatOptions 80 -Z 2400 Stánek.pdf --out stanek-apac/assets/back.jpg
 ```
 
-TV visí uprostřed volného pole grafiky (52–120 cm od horní hrany), střed
-`tv.centerFromTop` v `booths/apac.json`. Když se grafika změní, přeměř ho.
+TV 55″ visí vodorovně uprostřed, horní hrana rámu 50 cm od horní hrany stěny
+(podle specifikace pořadatele) — `tv.top` v `booths/apac.json`.

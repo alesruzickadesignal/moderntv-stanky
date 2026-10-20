@@ -50,7 +50,7 @@ FUTURECOM zapsaná přímo v `src/booth.html` — při změně `booths/futurecom
    - `panels`: které panely stánek má (`back`, `left`, `right`, `fascia`, `counter`, `tv`)
      a jejich výchozí `w`/`h` v cm, případně `name`
    - `tv.size`: výchozí úhlopříčka (43/50/55/65); `tv.pos` (`back`/`left`/`right`) pro `"u"`;
-     `tv.centerFromTop` = střed TV v cm od horní hrany stěny pro `"wall"`
+     `tv.top` = horní hrana TV (vč. rámu) v cm od horní hrany stěny pro `"wall"`
 2. Náhledy grafiky dej do `stanek-<id>/assets/` (názvy viz `stanek-futurecom/assets/README.md`).
 3. `python3 build.py` — vznikne `stanek-<id>/` a odkaz v rozcestníku.
 
